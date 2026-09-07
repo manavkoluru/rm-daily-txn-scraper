@@ -2,7 +2,9 @@ name: Rich Maker Daily Scraper
 
 on:
   workflow_dispatch:
+
   schedule:
+    # Every day at 03:00 UTC
     - cron: "0 3 * * *"
 
 jobs:
@@ -14,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up Python
-        uses: actions/setup-python@v5 
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
@@ -24,25 +26,44 @@ jobs:
           pip install -r requirements.txt
           playwright install --with-deps chromium
 
-      - name: Check configured environment names
+      - name: Verify required secrets
         env:
           RM_USER_1: ${{ secrets.RM_USER_1 }}
           RM_PASS_1: ${{ secrets.RM_PASS_1 }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LOGIN_URL: ${{ secrets.LOGIN_URL }}
         run: |
-          test -n "$RM_USER_1" && echo "RM_USER_1 is configured" || echo "RM_USER_1 is missing"
-          test -n "$RM_PASS_1" && echo "RM_PASS_1 is configured" || echo "RM_PASS_1 is missing"
-          test -n "$TELEGRAM_BOT_TOKEN" && echo "TELEGRAM_BOT_TOKEN is configured" || echo "TELEGRAM_BOT_TOKEN is missing"
-          test -n "$TELEGRAM_CHAT_ID" && echo "TELEGRAM_CHAT_ID is configured" || echo "TELEGRAM_CHAT_ID is missing"
+          test -n "$RM_USER_1" && echo "RM_USER_1 is configured" || exit 1
+          test -n "$RM_PASS_1" && echo "RM_PASS_1 is configured" || exit 1
+          test -n "$TELEGRAM_BOT_TOKEN" && echo "TELEGRAM_BOT_TOKEN is configured" || exit 1
+          test -n "$TELEGRAM_CHAT_ID" && echo "TELEGRAM_CHAT_ID is configured" || exit 1
+          test -n "$LOGIN_URL" && echo "LOGIN_URL is configured" || exit 1
 
       - name: Run scraper
         env:
           RM_USER_1: ${{ secrets.RM_USER_1 }}
           RM_PASS_1: ${{ secrets.RM_PASS_1 }}
 
+          RM_USER_2: ${{ secrets.RM_USER_2 }}
+          RM_PASS_2: ${{ secrets.RM_PASS_2 }}
+
+          RM_USER_3: ${{ secrets.RM_USER_3 }}
+          RM_PASS_3: ${{ secrets.RM_PASS_3 }}
+
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LOGIN_URL: ${{ secrets.LOGIN_URL }}
 
         run: python main.py
+
+      - name: Upload dashboard debugging files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dashboard-debug-files
+          path: |
+            dashboard-*.html
+            dashboard-*.png
+            login-failed-*.png
+          if-no-files-found: ignore
