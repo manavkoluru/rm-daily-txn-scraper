@@ -1,33 +1,48 @@
-name: Daily Scraper Schedule
+name: Rich Maker Daily Scraper
 
 on:
+  workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'  # Runs daily at 02:00 UTC
-  workflow_dispatch:      # Allows manual trigger via GitHub UI
+    - cron: "0 3 * * *"
 
 jobs:
-  run-scraper:
+  scrape:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5 
         with:
-          python-version: '3.11'
-          cache: 'pip'
+          python-version: "3.12"
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install beautifulsoup4
-          pip install playwright beautifulsoup4
-          playwright install chromium
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-          python -m playwright install --with-deps chromium
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
 
-      - name: Execute Scraper
+      - name: Check configured environment names
         env:
+          RM_USER_1: ${{ secrets.RM_USER_1 }}
+          RM_PASS_1: ${{ secrets.RM_PASS_1 }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
-          ACCOUNT_CREDENTIALS: ${{ secrets.ACCOUNT_CREDENTIALS }}
+        run: |
+          test -n "$RM_USER_1" && echo "RM_USER_1 is configured" || echo "RM_USER_1 is missing"
+          test -n "$RM_PASS_1" && echo "RM_PASS_1 is configured" || echo "RM_PASS_1 is missing"
+          test -n "$TELEGRAM_BOT_TOKEN" && echo "TELEGRAM_BOT_TOKEN is configured" || echo "TELEGRAM_BOT_TOKEN is missing"
+          test -n "$TELEGRAM_CHAT_ID" && echo "TELEGRAM_CHAT_ID is configured" || echo "TELEGRAM_CHAT_ID is missing"
+
+      - name: Run scraper
+        env:
+          RM_USER_1: ${{ secrets.RM_USER_1 }}
+          RM_PASS_1: ${{ secrets.RM_PASS_1 }}
+
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          LOGIN_URL: ${{ secrets.LOGIN_URL }}
+
         run: python main.py
