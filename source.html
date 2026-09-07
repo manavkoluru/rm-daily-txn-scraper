@@ -1,0 +1,2794 @@
+        
+ <!doctype html>
+<html lang="en"  data-bs-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rich Maker</title>
+  <!--favicon-->
+  <link rel="icon" href="https://app.richmakers.space/uploads/system/1749799744_147c6e7de0a2e277f1e1.png" type="image/png">
+  <!-- loader-->
+	<link href="https://app.richmakers.space/app/css/pace.min.css" rel="stylesheet">
+	<script src="https://app.richmakers.space/app/js/pace.min.js"></script>
+
+  <!--plugins-->
+  <link href="https://app.richmakers.space/app/plugins/perfect-scrollbar/css/perfect-scrollbar.css" rel="stylesheet">
+  <link rel="stylesheet" type="text/css" href="https://app.richmakers.space/app/plugins/metismenu/metisMenu.min.css">
+  <link rel="stylesheet" type="text/css" href="https://app.richmakers.space/app/plugins/metismenu/mm-vertical.css">
+  <link rel="stylesheet" type="text/css" href="https://app.richmakers.space/app/plugins/simplebar/css/simplebar.css">
+  <!--bootstrap css-->
+  <link href="https://app.richmakers.space/app/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css?family=Material+Icons+Outlined" rel="stylesheet">
+  
+ 
+ <!---->
+  <!--main css-->
+  <link href="https://app.richmakers.space/app/css/bootstrap-extended.css" rel="stylesheet">
+  <link href="https://app.richmakers.space/app/sass/main.css" rel="stylesheet">
+  <link href="https://app.richmakers.space/app/sass/dark-theme.css" rel="stylesheet">
+  <link href="https://app.richmakers.space/app/sass/blue-theme.css" rel="stylesheet">
+  <link href="https://app.richmakers.space/app/sass/semi-dark.css" rel="stylesheet">
+  <link href="https://app.richmakers.space/app/sass/bordered-theme.css" rel="stylesheet">
+  <link href="https://app.richmakers.space/app/sass/responsive.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+  <!--start header-->
+  <header class="top-header">
+    <nav class="navbar navbar-expand align-items-center gap-4">
+      <div class="btn-toggle">
+        <a href="javascript:;"><i class="material-icons-outlined">menu</i></a>
+      </div>
+      <div class="search-bar flex-grow-1">
+        <div class="position-relative  d-none">
+          <input class="form-control rounded-5 px-5 search-control d-lg-block d-none" type="text" placeholder="Search">
+          <span class="material-icons-outlined position-absolute d-lg-block d-none ms-3 translate-middle-y start-0 top-50">search</span>
+          <span class="material-icons-outlined position-absolute me-3 translate-middle-y end-0 top-50 search-close">close</span>
+          <div class="search-popup p-3">
+            <div class="card rounded-4 overflow-hidden">
+              <div class="card-header d-lg-none">
+                <div class="position-relative">
+                  <input class="form-control rounded-5 px-5 mobile-search-control" type="text" placeholder="Search">
+                  <span class="material-icons-outlined position-absolute ms-3 translate-middle-y start-0 top-50">search</span>
+                  <span class="material-icons-outlined position-absolute me-3 translate-middle-y end-0 top-50 mobile-search-close">close</span>
+                 </div>
+              </div>
+              <div class="card-body search-content">
+                <p class="search-title">Recent Searches</p>
+                <div class="d-flex align-items-start flex-wrap gap-2 kewords-wrapper">
+                  <a href="javascript:;" class="kewords"><span>Angular Template</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                  <a href="javascript:;" class="kewords"><span>Dashboard</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                  <a href="javascript:;" class="kewords"><span>Admin Template</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                  <a href="javascript:;" class="kewords"><span>Bootstrap 5 Admin</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                  <a href="javascript:;" class="kewords"><span>Html eCommerce</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                  <a href="javascript:;" class="kewords"><span>Sass</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                  <a href="javascript:;" class="kewords"><span>laravel 9</span><i
+                      class="material-icons-outlined fs-6">search</i></a>
+                </div>
+                <hr>
+                <p class="search-title">Tutorials</p>
+                <div class="search-list d-flex flex-column gap-2">
+                  <div class="search-list-item d-flex align-items-center gap-3">
+                    <div class="list-icon">
+                      <i class="material-icons-outlined fs-5">play_circle</i>
+                    </div>
+                    <div class="">
+                      <h5 class="mb-0 search-list-title ">Wordpress Tutorials</h5>
+                    </div>
+                  </div>
+                  <div class="search-list-item d-flex align-items-center gap-3">
+                    <div class="list-icon">
+                      <i class="material-icons-outlined fs-5">shopping_basket</i>
+                    </div>
+                    <div class="">
+                      <h5 class="mb-0 search-list-title">eCommerce Website Tutorials</h5>
+                    </div>
+                  </div>
+  
+                  <div class="search-list-item d-flex align-items-center gap-3">
+                    <div class="list-icon">
+                      <i class="material-icons-outlined fs-5">laptop</i>
+                    </div>
+                    <div class="">
+                      <h5 class="mb-0 search-list-title">Responsive Design</h5>
+                    </div>
+                  </div>
+                </div>
+  
+                <hr>
+                <p class="search-title">Members</p>
+  
+                <div class="search-list d-flex flex-column gap-2">
+                  <div class="search-list-item d-flex align-items-center gap-3">
+                    <div class="memmber-img">
+                      <img src="assets/images/avatars/01.png" width="32" height="32" class="rounded-circle" alt="">
+                    </div>
+                    <div class="">
+                      <h5 class="mb-0 search-list-title ">Andrew Stark</h5>
+                    </div>
+                  </div>
+  
+                  <div class="search-list-item d-flex align-items-center gap-3">
+                    <div class="memmber-img">
+                      <img src="assets/images/avatars/02.png" width="32" height="32" class="rounded-circle" alt="">
+                    </div>
+                    <div class="">
+                      <h5 class="mb-0 search-list-title ">Snetro Jhonia</h5>
+                    </div>
+                  </div>
+  
+                  <div class="search-list-item d-flex align-items-center gap-3">
+                    <div class="memmber-img">
+                      <img src="assets/images/avatars/03.png" width="32" height="32" class="rounded-circle" alt="">
+                    </div>
+                    <div class="">
+                      <h5 class="mb-0 search-list-title">Michle Clark</h5>
+                    </div>
+                  </div>
+  
+                </div>
+              </div>
+              <div class="card-footer text-center bg-transparent">
+                <a href="javascript:;" class="btn w-100">See All Search Results</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="navbar-nav gap-1 nav-right-links align-items-center">
+        
+
+         
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle dropdown-toggle-nocaret" data-bs-auto-close="outside"
+            data-bs-toggle="dropdown" ><i class="material-icons-outlined">apps</i></a>
+          <div class="dropdown-menu dropdown-menu-end dropdown-apps shadow-lg p-3"   >
+            <div class="border rounded-4 overflow-hidden">
+              <div class="row row-cols-3 g-0 border-bottom">
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/71363674754d5373/6c72756a6b4d536f714b7166703667253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/deposits.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Deposit</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6c62476c6e4d4362704a69646d41253344253344';" >
+              
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/active.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Activate</p>
+                    </div>
+                  </div>
+               
+                </div>
+                <div class="col" onclick="window.location.href='https://app.richmakers.space/member/71363674754d5373/71376131744d4f716d7136586e77253344253344';" >
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/withdrawal.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Withdraw</p>
+                    </div>
+                  </div>
+                </div>
+              </div><!--end row-->
+
+              <div class="row row-cols-3 g-0 border-bottom" >
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6c62476c6e4d4362704a69646d41253344253344/68374b747367253344253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/history.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">My&nbsp;Package</p>
+                    </div>
+                  </div>
+                </div>
+                
+        
+         
+
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/71363674754d5373/6d615369754d75647251253344253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/wallet-2.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">E-wallet</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col" onclick="window.location.href='https://app.richmakers.space/member/71363674754d5373/6c615369754d75647251253344253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/wallet.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">A-wallet</p>
+                    </div>
+                  </div>
+                </div>
+              </div><!--end row-->
+
+              <div class="row row-cols-3 g-0 border-bottom">
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/6f724b31773836717041253344253344/68724b6e736447716d714d253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/users.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">My&nbsp;Referral</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f636152767336656f714f62';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/setting.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Setting</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/support.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Support</p>
+                    </div>
+                  </div>
+                </div>
+              </div><!--end row-->
+
+
+
+
+              <div class="row row-cols-3 g-0 d-none">
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/reward.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Reward</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col border-end" onclick="window.location.href='https://app.richmakers.space/member/70724b7875394773/7071367674374b736d7175727067253344253344';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/recognition.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Royalty</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="col" onclick="window.location.href='https://app.richmakers.space/member/70724b7875394773/6871363174633537714b536a6e4b696f6d714768';">
+                  <div class="app-wrapper d-flex flex-column gap-2 text-center">
+                    <div class="app-icon">
+                      <img src="https://app.richmakers.space/icons/matching.svg" width="36" alt="">
+                    </div>
+                    <div class="app-name">
+                      <p class="mb-0">Revenue Reward</p>
+                    </div>
+                  </div>
+                </div>
+              </div><!--end row-->
+            </div>
+          </div>
+        </li>
+        
+        
+        
+        <li class="nav-item dropdown">
+          <a class="nav-link dropdown-toggle dropdown-toggle-nocaret position-relative" data-bs-auto-close="outside"
+            data-bs-toggle="dropdown" href="javascript:;"><i class="material-icons-outlined">notifications</i>
+            <!--<span class="badge-notify">5</span>-->
+          </a>
+          <div class="dropdown-menu dropdown-notify dropdown-menu-end shadow">
+            <div class="px-3 py-1 d-flex align-items-center justify-content-between border-bottom">
+              <h5 class="notiy-title mb-0">Log-Notifications</h5>
+               
+            </div>
+            <div class="notify-list" style="    height: auto!important;">
+                
+                            <div>
+                <a class="dropdown-item border-bottom py-2" href="javascript:;">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="">
+                    
+                                                <img src="https://app.richmakers.space/icons/success.svg" class="rounded-circle" width="45" height="45" alt="">
+                                            
+                    </div>
+                    <div class="">
+                        
+                      <h5 class="notify-title">Successfully Logged In</h5>
+                      <p class="mb-0 notify-desc">IP : 49.37.163.201</p>
+                      <p class="mb-0 notify-time">08-Sep-2026 02:54 AM</p>
+                    </div>
+                    <!--<div class="notify-close position-absolute end-0 me-3">-->
+                    <!--  <i class="material-icons-outlined fs-6">close</i>-->
+                    <!--</div>-->
+                  </div>
+                </a>
+              </div>
+                            <div>
+                <a class="dropdown-item border-bottom py-2" href="javascript:;">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="">
+                    
+                                                <img src="https://app.richmakers.space/icons/success.svg" class="rounded-circle" width="45" height="45" alt="">
+                                            
+                    </div>
+                    <div class="">
+                        
+                      <h5 class="notify-title">Successfully Logged In</h5>
+                      <p class="mb-0 notify-desc">IP : 52.188.198.99</p>
+                      <p class="mb-0 notify-time">08-Sep-2026 02:54 AM</p>
+                    </div>
+                    <!--<div class="notify-close position-absolute end-0 me-3">-->
+                    <!--  <i class="material-icons-outlined fs-6">close</i>-->
+                    <!--</div>-->
+                  </div>
+                </a>
+              </div>
+                            <div>
+                <a class="dropdown-item border-bottom py-2" href="javascript:;">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="">
+                    
+                                                <img src="https://app.richmakers.space/icons/success.svg" class="rounded-circle" width="45" height="45" alt="">
+                                            
+                    </div>
+                    <div class="">
+                        
+                      <h5 class="notify-title">Successfully Logged In</h5>
+                      <p class="mb-0 notify-desc">IP : 49.37.163.201</p>
+                      <p class="mb-0 notify-time">08-Sep-2026 02:50 AM</p>
+                    </div>
+                    <!--<div class="notify-close position-absolute end-0 me-3">-->
+                    <!--  <i class="material-icons-outlined fs-6">close</i>-->
+                    <!--</div>-->
+                  </div>
+                </a>
+              </div>
+                            <div>
+                <a class="dropdown-item border-bottom py-2" href="javascript:;">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="">
+                    
+                                                <img src="https://app.richmakers.space/icons/success.svg" class="rounded-circle" width="45" height="45" alt="">
+                                            
+                    </div>
+                    <div class="">
+                        
+                      <h5 class="notify-title">Successfully Logged In</h5>
+                      <p class="mb-0 notify-desc">IP : 49.37.163.201</p>
+                      <p class="mb-0 notify-time">08-Sep-2026 02:08 AM</p>
+                    </div>
+                    <!--<div class="notify-close position-absolute end-0 me-3">-->
+                    <!--  <i class="material-icons-outlined fs-6">close</i>-->
+                    <!--</div>-->
+                  </div>
+                </a>
+              </div>
+                            <div>
+                <a class="dropdown-item border-bottom py-2" href="javascript:;">
+                  <div class="d-flex align-items-center gap-3">
+                    <div class="">
+                    
+                                                <img src="https://app.richmakers.space/icons/success.svg" class="rounded-circle" width="45" height="45" alt="">
+                                            
+                    </div>
+                    <div class="">
+                        
+                      <h5 class="notify-title">Successfully Logged In</h5>
+                      <p class="mb-0 notify-desc">IP : 49.37.163.201</p>
+                      <p class="mb-0 notify-time">08-Sep-2026 01:33 AM</p>
+                    </div>
+                    <!--<div class="notify-close position-absolute end-0 me-3">-->
+                    <!--  <i class="material-icons-outlined fs-6">close</i>-->
+                    <!--</div>-->
+                  </div>
+                </a>
+              </div>
+                          </div>
+          </div>
+        </li>
+        
+        <li class="nav-item dropdown">
+          <a href="javascrpt:;" class="dropdown-toggle dropdown-toggle-nocaret" data-bs-toggle="dropdown">
+             <img src="https://app.richmakers.space/uploads/system/1749799744_147c6e7de0a2e277f1e1.png" class="rounded-circle p-1 border" width="45" height="45" alt="">
+          </a>
+          <div class="dropdown-menu dropdown-user dropdown-menu-end shadow">
+            <a class="dropdown-item  gap-2 py-2" href="javascript:;">
+              <div class="text-center">
+                <img src="https://app.richmakers.space/uploads/system/1749799744_147c6e7de0a2e277f1e1.png" class="rounded-circle p-1 shadow mb-3" width="90" height="90"
+                  alt="">
+                <h5 class="user-name mb-0 fw-bold">Hello, R625263</h5>
+              </div>
+            </a>
+            <hr class="dropdown-divider">
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344"><i
+              class="material-icons-outlined">person_outline</i>Profile</a>
+            <!--<a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:;"><i-->
+            <!--  class="material-icons-outlined">local_bar</i>Setting</a>-->
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f636152767336656f714f62"><i
+              class="material-icons-outlined">dashboard</i>Dashboard</a>
+            <!--<a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:;"><i-->
+            <!--  class="material-icons-outlined">account_balance</i>Earning</a>-->
+              <!--<a class="dropdown-item d-flex align-items-center gap-2 py-2" href="javascript:;"><i-->
+              <!--  class="material-icons-outlined">cloud_download</i>Downloads</a>-->
+            <hr class="dropdown-divider">
+            <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f4c796f6d395373"><i
+            class="material-icons-outlined">power_settings_new</i>Logout</a>
+          </div>
+        </li>
+      </ul>
+
+    </nav>
+  </header>
+
+
+  <!--end top header-->
+
+
+   <!--start sidebar-->
+  
+
+
+
+
+
+<aside class="sidebar-wrapper" data-simplebar="true">
+  <div class="sidebar-header">
+    <div class="logo-icon">
+      <img src="https://app.richmakers.space/uploads/system/1749799744_147c6e7de0a2e277f1e1.png" class="logo-img"
+        alt="">
+    </div>
+    <div class="logo-name flex-grow-1">
+      <h5 class="mb-0">Rich Maker</h5>
+    </div>
+    <div class="sidebar-close">
+      <span class="material-icons-outlined">close</span>
+    </div>
+  </div>
+  <div class="sidebar-nav">
+    <!--navigation-->
+    <ul class="metismenu" id="sidenav">
+      <li>
+        <a href="https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344">
+          <div class="parent-icon"> <i class="fas fa-tachometer-alt"></i> </div>
+          <div class="menu-title">Dashboard </div>
+        </a>
+
+      </li>
+      <li>
+        <a href="javascript:;" class="has-arrow">
+          <div class="parent-icon"><i class="fas fa-user-cog"></i></div>
+          <div class="menu-title">My Account</div>
+        </a>
+        <ul>
+          <li><a href="https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6c62476c6e4d4362704a69646d41253344253344"><i
+                class="material-icons-outlined">arrow_right</i>Activate / Upgrade Plan </a> </li>
+          <li><a
+              href="https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6c62476c6e4d4362704a69646d41253344253344/68374b747367253344253344"><i
+                class="material-icons-outlined">arrow_right</i>View My Subscription </a> </li>
+          <li><a href="https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f636152767336656f714f62"><i
+                class="material-icons-outlined">arrow_right</i>Profile Settings</a> </li>
+          <!--<li><a href="#"><i class="material-icons-outlined">arrow_right</i>KYC Verification</a> </li>-->
+          <!--<li><a href="#"><i class="material-icons-outlined">arrow_right</i>Change Login Password</a> </li>-->
+          <!--<li><a href="#"><i class="material-icons-outlined">arrow_right</i>Transaction PIN Setup</a> </li>-->
+
+        </ul>
+      </li>
+      <li>
+        <a class="has-arrow" href="javascript:;">
+          <div class="parent-icon"><i class="fas fa-wallet"></i> </div>
+          <div class="menu-title">Finance</div>
+        </a>
+        <ul>
+            
+            
+           <!--<li><a-->
+           <!--   href="https://app.richmakers.space/member/71363674754d5373/6c72756a6b4d536f714b7166703667253344"><i-->
+           <!--     class="material-icons-outlined">arrow_right</i>Instant Deposit</a> </li>   -->
+          <li><a
+              href="https://app.richmakers.space/member/71363674754d5373/6d734b76734c47647171796270716b253344/643725324236764e4f6e"><i
+                class="material-icons-outlined">arrow_right</i>  Fund Request </a> </li>
+          <li><a href="https://app.richmakers.space/member/71363674754d5373/71376131744d4f716d7136586e77253344253344"><i
+                class="material-icons-outlined">arrow_right</i>Request Withdrawal</a> </li>
+          <!--<li><a href="#"><i class="material-icons-outlined">arrow_right</i>Wallet Transfer</a> </li>-->
+          <li><a href="https://app.richmakers.space/member/71363674754d5373/714c2532426975744b5a6e4b75666f714e396d71576e6f3725324236"><i
+                class="material-icons-outlined">arrow_right</i>Transaction History</a> </li>
+
+        </ul>
+      </li>
+
+      <li>
+        <a class="has-arrow" href="javascript:;">
+          <div class="parent-icon"><i class="fas fa-piggy-bank"></i> </div>
+          <div class="menu-title">Wallets</div>
+        </a>
+        <ul>
+          <li><a href="https://app.richmakers.space/member/71363674754d5373/6d615369754d75647251253344253344"><i
+                class="material-icons-outlined">arrow_right</i>E-Wallet Statement</a> </li>
+          <li><a href="https://app.richmakers.space/member/71363674754d5373/6c615369754d75647251253344253344"><i
+                class="material-icons-outlined">arrow_right</i>A-Wallet Statement</a> </li>
+          <li><a href="https://app.richmakers.space/member/71363674754d5373/6d734b76734c47647171796270716b253344"><i
+                class="material-icons-outlined">arrow_right</i>Deposit History</a> </li>
+          <li><a href="https://app.richmakers.space/member/71363674754d5373/69376131744d4f716d71352532426e4b69706f4b5373"><i
+                class="material-icons-outlined">arrow_right</i>Withdrawal History</a> </li>
+
+
+
+
+        </ul>
+      </li>
+
+
+
+
+
+
+      <li>
+        <a class="has-arrow" href="javascript:;">
+          <div class="parent-icon"><i class="fas fa-users"></i> </div>
+          <div class="menu-title">My Network</div>
+        </a>
+        <ul>
+          <li><a href="https://app.richmakers.space/member/6f724b31773836717041253344253344/68724b6e736447716d714d253344"><i
+                class="material-icons-outlined">arrow_right</i>Direct Referrals</a> </li>
+          <li><a href="https://app.richmakers.space/member/6f724b31773836717041253344253344/6f4c4b3373637438714b366b6e35366a6c67253344253344"><i
+                class="material-icons-outlined">arrow_right</i>Downline View</a> </li>
+            
+          <li><a href="https://app.richmakers.space/member/6f724b31773836717041253344253344/6f4c4b337363754d71357962"><i
+                class="material-icons-outlined">arrow_right</i>Level Tree</a> </li>
+         
+          <li><a href="https://app.richmakers.space/member/6f724b31773836717041253344253344/674c4b337363754f6f707974"><i
+                class="material-icons-outlined">arrow_right</i>Level-wise View</a> </li>
+                
+           <li><a href="https://app.richmakers.space/member/6f724b31773836717041253344253344/6f4c4b337363754c725a6971714b67253344"><i
+                class="material-icons-outlined">arrow_right</i>Level Status</a> </li>     
+                
+
+        </ul>
+      </li>
+
+      <li>
+        <a class="has-arrow" href="javascript:;">
+          <div class="parent-icon"><i class="fas fa-chart-line"></i> </div>
+          <div class="menu-title">Income Reports</div>
+        </a>
+
+
+
+
+
+        <ul>
+          <li><a href="https://app.richmakers.space/member/70724b7875394773/654b3671754e694b6e71756f714b4d253344"><i
+                class="material-icons-outlined">arrow_right</i>Revenue Share Reward</a> </li>
+          <li><a href="https://app.richmakers.space/member/70724b7875394773/654c617a73634b7369357971714b656a"><i
+                class="material-icons-outlined">arrow_right</i>Direct Sponsor Reward</a> </li>
+
+          <li><a href="https://app.richmakers.space/member/70724b7875394773/674c4b337363754b714941253344"><i
+                class="material-icons-outlined">arrow_right</i>Level Bonus</a> </li>
+
+
+          <!--<li><a href="https://app.richmakers.space/member/70724b7875394773/68724b7577633264713569716e4b536a657143576f37716d"><i-->
+          <!--      class="material-icons-outlined">arrow_right</i>RemunerationIncome</a> </li>-->
+
+          <!-- <li><a href="https://app.richmakers.space/member/70724b7875394773/6871363174633537714b536a6e4b696f6d714768"><i class="material-icons-outlined">arrow_right</i>Matching Reward</a> </li> -->
+          <li><a href="https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344"><i
+                class="material-icons-outlined">arrow_right</i>Rank Reward</a> </li>
+          <li><a href="https://app.richmakers.space/member/70724b7875394773/7071367674374b736d7175727067253344253344"><i
+                class="material-icons-outlined">arrow_right</i>Royalty Reward</a> </li>
+          <li><a href="https://app.richmakers.space/member/70724b7875394773/694c793172637437714b536a6e4b696f6d714768"><i
+                class="material-icons-outlined">arrow_right</i>Reward Summary</a> </li>
+
+        </ul>
+      </li>
+
+      <!--<li>-->
+      <!--  <a class="has-arrow" href="javascript:;">-->
+      <!--    <div class="parent-icon"><i class="fas fa-clipboard-list"></i>            </div>-->
+      <!--    <div class="menu-title">Reports</div>-->
+      <!--  </a>-->
+      <!--  <ul>-->
+      <!--    <li><a href="#"><i class="material-icons-outlined">arrow_right</i>Business Volume</a>          </li>-->
+      <!--    <li><a href="#"><i class="material-icons-outlined">arrow_right</i>Commission Summary</a>          </li>-->
+      <!--    <li><a href="#"><i class="material-icons-outlined">arrow_right</i>Income Statement</a> </li>-->
+      <!--    <li><a href="#"><i class="material-icons-outlined">arrow_right</i>Payout Summary</a> </li>-->
+
+      <!--  </ul>-->
+      <!--</li>-->
+
+
+
+      <li>
+        <a href="javascrpt:;">
+          <div class="parent-icon"><i class="fas fa-life-ring"></i> </div>
+          <div class="menu-title">Support</div>
+        </a>
+      </li>
+
+      <li>
+        <a href="https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f4c796f6d395373">
+          <div class="parent-icon"><i class="fas fa-sign-out-alt"></i> </div>
+          <div class="menu-title">Log Out</div>
+        </a>
+      </li>
+
+
+    </ul>
+    <!--end navigation-->
+  </div>
+</aside>
+
+
+
+ 
+  <!--end sidebar-->
+
+  <!--start main wrapper-->
+  <style>
+  h5 {
+    font-size: 18px !important;
+  }
+</style>
+<main class="main-wrapper">
+  <div class="main-content">
+
+
+    <div class="row">
+      <div class="col-xxl-12 d-flex align-items-stretch">
+        <div class="card w-100 overflow-hidden rounded-4">
+          <div class="card-body position-relative p-4">
+            <div class="row">
+              <div class="col-12 col-sm-7">
+                <div class="d-flex align-items-center gap-3 mb-5">
+                  <img src="https://app.richmakers.space/uploads/system/1749799744_147c6e7de0a2e277f1e1.png"
+                    class="rounded-circle bg-grd-info p-1" width="60" height="60" alt="user">
+                  <div class="">
+                    <p class="mb-0 fw-semibold">Welcome back</p>
+                    <h4 class="fw-semibold mb-0 fs-4 mb-0">R625263 !</h4>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-5">
+                  <div class="">
+                    <h5 class="mb-1 fw-semibold d-flex align-content-center"
+                      style="white-space:nowrap;    font-size: 12px;">
+                      $ 187.10<i
+                        class="ti ti-arrow-up-right fs-5 lh-base text-success"></i>
+                    </h5>
+                    <p class="mb-3">E-wallet</p>
+                    <div class="progress mb-0" style="height:5px;">
+                      <div class="progress-bar bg-grd-success" role="progressbar" style="width: 60%" aria-valuenow="25"
+                        aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </div>
+                  <div class="vr"></div>
+                  <div class="">
+                    <h5 class="mb-1 fw-semibold d-flex align-content-center"
+                      style="white-space:nowrap;    font-size: 12px;">
+                      $ 0.00<i
+                        class="ti ti-arrow-up-right fs-5 lh-base text-success"></i>
+                    </h5>
+                    <p class="mb-3">A-wallet</p>
+                    <div class="progress mb-0" style="height:5px;">
+                      <div class="progress-bar bg-grd-danger" role="progressbar" style="width: 60%" aria-valuenow="25"
+                        aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-12 col-sm-5">
+                <div class="welcome-back-img pt-4">
+                  <img src="https://app.richmakers.space/app/images/gallery/welcome-back-3.png" height="180"
+                    alt="">
+                </div>
+              </div>
+            </div><!--end row-->
+          </div>
+        </div>
+      </div>
+<div class="alert border-0 bg-grd-success2 alert-dismissible fade show mt-3">
+  <div class="d-flex justify-content-between align-items-center w-100">
+    
+    <!-- Left Area -->
+    <div class="d-flex align-items-center">
+      <span class="material-icons-outlined fs-2 text-white">military_tech</span>
+      <h6 class="mb-0 ms-2 text-white">Your Current Rank</h6>
+    </div>
+
+    <!-- Right Area: Rank Badge -->
+    <div class="rank-display">
+      <span class='badge badge-primary rank-badge'>Rich-2</span>    </div>
+
+  </div>
+</div>
+<style>
+    .rank-badge {
+    font-size: 14px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    letter-spacing: 0.5px;
+}
+
+/* Achieved Rank Gradient */
+.bg-grd-success {
+    background: linear-gradient(45deg, #0c8f4e, #14d67e);
+}
+
+/* Pending Rank Gradient */
+.bg-grd-warning {
+    background: linear-gradient(45deg, #ffa726, #ff7043);
+}
+
+/* Blue Info Gradient (If Needed) */
+.bg-grd-info {
+    background: linear-gradient(45deg, #007bff, #00c6ff);
+}
+
+.rank-display {
+    margin-right: 8px;
+}
+.bg-grd-success2 { background-image: linear-gradient(310deg, #0d6efd, #6c757d) !important; }
+</style>
+
+
+              <div class="alert alert-success border-0 bg-grd-success alert-dismissible fade show">
+          <div class="d-flex align-items-center">
+            <div class="font-35 text-white">
+              <span class="material-icons-outlined fs-2">check_circle</span>
+            </div>
+            <div class="ms-3">
+              <h6 class="mb-0 text-white">Active Investment</h6>
+              <div class="text-white">You have invested $ 6,000.</div>
+            </div>
+          </div>
+          <!-- No close button for active -->
+        </div>
+      
+
+
+
+
+
+      <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-4">
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-success text-success bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <!--<span class="material-icons-outlined">account_circle</span>-->
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-314.00003,-233)">
+                        <path d="m 318.50027,237.5 h 19.99445 l 9.00552,9 -0.006,29 h -28.99445 z" id="rect19954"
+                          style="fill:#f8f8f8;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="M 318.50024,245.5293 V 275.5 h 23.83203 a 28.826267,16.861496 50.597708 0 0 -9,-18.18946 28.826267,16.861496 50.597708 0 0 -14.83203,-11.78124 z"
+                          id="path25329"
+                          style="fill:#e4e9ef;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path d="m 347.50024,246.5 h -9 v -9 z" id="rect19969"
+                          style="fill:#e4e9ef;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path d="m 322.50027,241.5 h 11.99997 v 6 h -11.99997 z" id="rect19974"
+                          style="fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 322.31274,258.5 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 12.48437 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path19976"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 322.23266,262.5 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 9.53516 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path19978"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 322.11157,266.5 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 9.77734 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path19980"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 322.33422,270.5 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 11.16602 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path19982"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path
+                          d="m 322.61157,250.5 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 17.77734 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path20716"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 322.50024,254.5 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 13 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path20718"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 357.50024,266.49998 c 0,5.52285 -4.47716,10.00002 -10.00002,10.00002 -5.52288,0 -10.00004,-4.47717 -10.00004,-10.00002 0,-5.52286 4.47716,-10.00004 10.00004,-10.00004 5.52286,0 10.00002,4.47718 10.00002,10.00004 z"
+                          id="path19956"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 347.50024,256.5 c -5.52287,0 -10,4.47715 -10,10 0,4.01074 2.3614,7.46892 5.76953,9.0625 5.1103,-1.59587 8.81836,-6.36785 8.81836,-12.00391 0,-2.46468 -0.7119,-4.76079 -1.9375,-6.70117 C 349.30645,256.62595 348.4179,256.5 347.50024,256.5 Z"
+                          id="path24291"
+                          style="fill:#f7c63d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 347.50024,258.82031 a 1.0055461,0.99447156 0 0 0 -1.00586,0.99609 v 1.28516 c -1.37449,0.41296 -2.40234,1.64607 -2.40234,3.1211 0,1.81802 1.56087,3.27148 3.4082,3.27148 0.80605,0 1.39648,0.58718 1.39648,1.2832 0,0.69605 -0.59044,1.2793 -1.39648,1.2793 -0.80605,0 -1.39648,-0.58325 -1.39648,-1.2793 a 1.0055461,0.99447156 0 0 0 -1.00586,-0.99609 1.0055461,0.99447156 0 0 0 -1.00586,0.99609 c 0,1.47503 1.02785,2.70815 2.40234,3.1211 v 1.28515 a 1.0055461,0.99447156 0 0 0 1.00586,0.9961 1.0055461,0.99447156 0 0 0 1.00391,-0.9961 v -1.28515 c 1.37488,-0.41243 2.40234,-1.64543 2.40234,-3.1211 0,-1.81801 -1.55892,-3.27148 -3.40625,-3.27148 -0.80606,0 -1.39648,-0.58715 -1.39648,-1.2832 0,-0.69603 0.59042,-1.2793 1.39648,-1.2793 0.80606,0 1.39648,0.58327 1.39648,1.2793 a 1.0055461,0.99447156 0 0 0 1.00586,0.99609 1.0055461,0.99447156 0 0 0 1.00391,-0.99609 c 0,-1.47566 -1.02746,-2.70868 -2.40234,-3.1211 v -1.28516 a 1.0055461,0.99447156 0 0 0 -1.00391,-0.99609 z"
+                          id="path24192"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999996;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path d="m 347.50021,261.94787 v -2.13194" id="path24184"
+                          style="color:#000000;fill:#ebcfb2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path d="m 347.50021,273.18399 v -2.13192" id="path24196"
+                          style="color:#000000;fill:#ebcfb2;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1;-inkscape-stroke:none">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">10.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 4,620.00</h5>
+                  <p class="mb-0">Revenue Reward</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-danger text-danger bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-26,-233)">
+                        <path
+                          d="m 50,256.52683 c -0.552285,0 -1,0.44772 -1,1 v 4.19734 H 35 c -0.552262,6e-5 -0.999945,0.44774 -1,1 v 5 c 0,0.55228 0.447715,1 1,1 0.552285,0 1,-0.44772 1,-1 v -4 h 13 v 4 c 0,0.55228 0.447715,1 1,1 0.552285,0 1,-0.44772 1,-1 v -4 h 13 v 4 c 0,0.55228 0.447715,1 1,1 0.552285,0 1,-0.44772 1,-1 v -5 c -5.5e-5,-0.55226 -0.447738,-0.99994 -1,-1 H 51 v -4.19734 c 0,-0.55228 -0.447715,-1 -1,-1 z"
+                          id="path809"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path
+                          d="m 60.499997,247.50003 c 0,5.79898 -4.700999,10.49999 -10.499997,10.49999 -5.798998,0 -10.500023,-4.70101 -10.500023,-10.49999 C 39.499977,241.70104 44.201002,237 50,237 c 5.798998,0 10.499997,4.70104 10.499997,10.50003 z"
+                          id="path742"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 50,237 c -5.798992,0 -10.5,4.70102 -10.5,10.5 0,4.73306 3.13127,8.73375 7.435547,10.04492 a 13.738508,13.366062 0 0 0 9.802734,-12.80078 13.738508,13.366062 0 0 0 -1.722656,-6.4707 C 53.525482,237.46183 51.816258,237 50,237 Z"
+                          id="path2884"
+                          style="fill:#f7c63d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 50,239.59375 a 1.0057659,0.99425603 0 0 0 -1.005859,0.99415 v 1.35351 c -1.42097,0.41539 -2.484376,1.68615 -2.484376,3.20508 0,1.86087 1.596827,3.34765 3.490235,3.34765 0.851906,0 1.480468,0.6222 1.480468,1.36133 -2e-6,0.73915 -0.628574,1.35742 -1.480468,1.35742 -0.851899,0 -1.478513,-0.61827 -1.478515,-1.35742 a 1.0057659,0.99425603 0 0 0 -1.00586,-0.9961 1.0057659,0.99425603 0 0 0 -1.00586,0.9961 c 4e-6,1.51893 1.063404,2.78774 2.484376,3.20313 v 1.35351 A 1.0057659,0.99425603 0 0 0 50,255.40624 a 1.0057659,0.99425603 0 0 0 1.005859,-0.99413 v -1.35351 c 1.42097,-0.41539 2.486325,-1.6842 2.486329,-3.20313 0,-1.86087 -1.598782,-3.34961 -3.492188,-3.34961 -0.851909,0 -1.478515,-0.62021 -1.478515,-1.35937 0,-0.73914 0.626601,-1.35938 1.478515,-1.35938 0.851909,0 1.480468,0.62024 1.480468,1.35938 a 1.0057659,0.99425603 0 0 0 1.005861,0.99413 1.0057659,0.99425603 0 0 0 1.005859,-0.99413 c 0,-1.51893 -1.06536,-2.78969 -2.486329,-3.20508 V 240.5879 A 1.0057659,0.99425603 0 0 0 50,239.59375 Z"
+                          id="path744"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="M 37.5,269.5 A 2.5,2.5 0 0 1 35,272 2.5,2.5 0 0 1 32.5,269.5 2.5,2.5 0 0 1 35,267 a 2.5,2.5 0 0 1 2.5,2.5 z"
+                          id="path5585"
+                          style="color:#000000;fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path d="m 30,277 c 0,-2.76143 2.238577,-5 5,-5 2.761423,0 5,2.23857 5,5 z" id="path5591"
+                          style="color:#000000;fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 35,272 c -2.604771,0 -4.744152,1.99154 -4.978516,4.53516 a 7.1580024,3.6352096 0 0 0 0.714844,0.0234 7.1580024,3.6352096 0 0 0 7.158203,-3.63476 C 37.077558,272.34266 36.078963,272 35,272 Z"
+                          id="path7739"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="M 67.5,269.5 A 2.5,2.5 0 0 1 65,272 2.5,2.5 0 0 1 62.5,269.5 2.5,2.5 0 0 1 65,267 a 2.5,2.5 0 0 1 2.5,2.5 z"
+                          id="path5597"
+                          style="color:#000000;fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path d="m 60,277 c 0,-2.76143 2.238577,-5 5,-5 2.761423,0 5,2.23857 5,5 z" id="path5603"
+                          style="color:#000000;fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 14.1907,279.93101 c -2.424431,-0.55834 -4.7652487,0.71496 -5.6008973,2.90782 a 5.2618299,2.4648857 -180 0 0 3.8645123,0.79861 5.2618299,2.4648857 -180 0 0 4.890294,-1.55768 c -0.726287,-1.0471 -1.829291,-1.84369 -3.153909,-2.14875 z"
+                          id="path7728"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1"
+                          transform="matrix(0.97403057,-0.22641654,0.18282299,0.98314585,0,0)"></path>
+                        <path
+                          d="M 52.5,269.5 A 2.5,2.5 0 0 1 50,272 2.5,2.5 0 0 1 47.5,269.5 2.5,2.5 0 0 1 50,267 a 2.5,2.5 0 0 1 2.5,2.5 z"
+                          id="path5609"
+                          style="color:#000000;fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path d="m 45,277 c 0,-2.76143 2.238577,-5 5,-5 2.761423,0 5,2.23857 5,5 z" id="path5615"
+                          style="color:#000000;fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">35.7%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 900.00</h5>
+                  <p class="mb-0">Direct Reward</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-info text-info bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-98,-89)">
+                        <path d="m 109,104 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path20378"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path d="m 135,104 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 z"
+                          id="path20380"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path d="m 130,117 5,-10 5,10 z" id="path14111"
+                          style="fill:#e4e9ef;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path d="m 104,117 5,-10 5,10 z" id="path20409"
+                          style="fill:#e4e9ef;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 129.57522,117 h 10.84956 v 0.74449 A 5.4247784,5.2114142 0 0 1 135,122.9559 a 5.4247784,5.2114142 0 0 1 -5.42478,-5.21141 z"
+                          id="path14113"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 129.57617,117 v 0.74414 a 5.4247784,5.2114142 -180 0 0 2.08398,4.10351 2.941319,10.692323 60 0 0 2.62891,-1.3789 A 2.941319,10.692323 60 0 0 139.26562,117 Z"
+                          id="path22605"
+                          style="fill:#f7c63d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 103.57522,117 h 10.84956 v 0.74449 A 5.4247784,5.2114142 0 0 1 109,122.9559 a 5.4247784,5.2114142 0 0 1 -5.42478,-5.21141 z"
+                          id="path20411"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 103.57523,117 -1e-5,0.74414 a 5.4247784,5.2114142 0 0 0 2.08399,4.10351 2.941319,10.692323 60 0 0 2.62891,-1.3789 A 2.941319,10.692323 60 0 0 113.26468,117 Z"
+                          id="path22736"
+                          style="fill:#f7c63d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 122,97.980469 a 1,1 0 0 0 -1,1 v 3.000001 h -15 a 1,1 0 0 0 -1,1 1,1 0 0 0 1,1 h 15 v 24 a 1,1 0 0 0 1,1 1,1 0 0 0 1,-1 v -24 h 15 a 1,1 0 0 0 1,-1 1,1 0 0 0 -1,-1 h -15 v -3.000001 a 1,1 0 0 0 -1,-1 z"
+                          id="path15290"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path d="m 118,128 h 8 a 2,2 0 0 1 2,2 v 2 h -12 v -2 a 2,2 0 0 1 2,-2 z" id="path18618"
+                          style="color:#000000;fill:#e4e9ef;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path
+                          d="m 125,97.000008 a 3.0000081,3.0000081 0 0 1 -3.00001,3.000012 3.0000081,3.0000081 0 0 1 -3.00001,-3.000012 A 3.0000081,3.0000081 0 0 1 121.99999,94 3.0000081,3.0000081 0 0 1 125,97.000008 Z"
+                          id="path18164"
+                          style="color:#000000;fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">25.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 2,365.10</h5>
+                  <p class="mb-0">Level Bonus</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-orange-light text-orange bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-242.00002,-449)">
+                        <path
+                          d="m 254.38513,454.3197 c 3.1077,1.22395 7.27919,2.07732 12.56535,0.9004 l -6.28267,9.90449 z"
+                          id="path25783"
+                          style="fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 249,474.12867 v 14.46899 l -2.72121,2.72204 h 28.79964 l -2.74282,-2.72204 v -14.46899 c 0,-6.46467 -5.22386,-11.70531 -11.66779,-11.70531 -6.44396,0 -11.66782,5.24064 -11.66782,11.70531 z"
+                          id="path25785"
+                          style="fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="M 260.43359,462.42908 C 254.09838,462.55494 249,467.74259 249,474.12829 v 14.46875 l -2.7207,2.72266 h 12.1582 a 16.399231,17.318275 0 0 0 8.4707,-15.10938 16.399231,17.318275 0 0 0 -6.47461,-13.78124 z"
+                          id="path80031"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:1.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 260.66746,467.22595 a 1.0498858,0.95248267 0 0 0 -1.05078,0.95313 v 2.07031 c -2.03048,0.41951 -3.58203,2.02326 -3.58203,3.95704 0,2.25635 2.11135,4.06444 4.63281,4.06444 1.43429,0 2.53125,0.98031 2.53125,2.16211 0,1.18179 -1.09696,2.1582 -2.53125,2.1582 -1.43428,0 -2.53125,-0.97643 -2.53125,-2.1582 a 1.0498858,0.95248267 0 0 0 -1.05078,-0.95313 1.0498858,0.95248267 0 0 0 -1.05078,0.95313 c 0,1.93375 1.55155,3.53751 3.58203,3.95703 v 2.07032 a 1.0498858,0.95248267 0 0 0 1.05078,0.95311 1.0498858,0.95248267 0 0 0 1.05078,-0.95311 v -2.07032 c 2.03049,-0.41952 3.58203,-2.02328 3.58203,-3.95703 0,-2.2564 -2.11134,-4.06446 -4.63281,-4.06446 -1.43428,0 -2.53125,-0.98035 -2.53125,-2.16209 10e-6,-1.18179 1.09699,-2.15822 2.53125,-2.15822 1.43428,0 2.53125,0.97643 2.53125,2.15822 a 1.0498858,0.95248267 0 0 0 1.05078,0.95311 1.0498858,0.95248267 0 0 0 1.05078,-0.95311 c 0,-1.93378 -1.55154,-3.53753 -3.58203,-3.95704 v -2.07031 a 1.0498858,0.95248267 0 0 0 -1.05078,-0.95313 z"
+                          id="path76006"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999993;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 270.00003,472.3197 c 0,4.41826 3.58171,7.99998 7.99998,7.99998 4.41828,0 8,-3.58172 8,-7.99998 0,-4.41827 -3.58172,-8 -8,-8 -4.41827,0 -7.99998,3.58173 -7.99998,8 z"
+                          id="path25801"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="M 275.56836,464.69665 C 272.33929,465.72593 270,468.74943 270,472.3197 c 0,4.41826 3.58173,8 8,8 1.45363,0 2.81547,-0.38877 3.99023,-1.06641 1.05719,-1.50996 1.67969,-3.34691 1.67969,-5.33007 0,-4.73124 -3.53131,-8.63536 -8.10156,-9.22657 z"
+                          id="path74900"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 278,465.9779 a 1.005548,0.99447354 0 0 0 -1.00391,0.99415 v 0.88476 c -1.10746,0.39472 -1.92187,1.42097 -1.92187,2.64062 0,1.5666 1.3438,2.81641 2.92578,2.81641 0.54071,0 0.91602,0.38349 0.91602,0.82813 0,0.44462 -0.3753,0.82422 -0.91602,0.82422 -0.54071,0 -0.91602,-0.3796 -0.91602,-0.82422 a 1.005548,0.99447354 0 0 0 -1.00585,-0.9961 1.005548,0.99447354 0 0 0 -1.00391,0.9961 c 0,1.21965 0.81441,2.2459 1.92187,2.64062 v 0.88477 A 1.005548,0.99447354 0 0 0 278,478.6615 a 1.005548,0.99447354 0 0 0 1.00586,-0.99414 v -0.88672 c 1.10669,-0.39534 1.92187,-1.41988 1.92187,-2.63867 0,-1.56661 -1.34574,-2.81641 -2.92773,-2.81641 -0.54071,0 -0.91602,-0.38352 -0.91602,-0.82813 10e-6,-0.44462 0.37532,-0.82422 0.91602,-0.82422 0.5407,0 0.91601,0.3796 0.91602,0.82422 a 1.005548,0.99447354 0 0 0 1.00586,0.9961 1.005548,0.99447354 0 0 0 1.00585,-0.9961 c 0,-1.21879 -0.81518,-2.24332 -1.92187,-2.63867 v -0.88671 A 1.005548,0.99447354 0 0 0 278,465.9779 Z"
+                          id="path25803"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path
+                          d="m 272.68646,475.62818 c -4.26771,1.14353 -6.80037,5.53021 -5.65684,9.79793 1.14353,4.26773 5.53023,6.80039 9.79794,5.65686 4.26772,-1.14353 6.80039,-5.53023 5.65685,-9.79796 -1.14353,-4.26772 -5.53023,-6.80036 -9.79795,-5.65683 z"
+                          id="path74959"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 281.49095,479.03378 c -1.82995,-2.85264 -5.35588,-4.32969 -8.8045,-3.40563 -4.26771,1.14353 -6.80039,5.53024 -5.65685,9.79796 0.37622,1.4041 1.10422,2.61891 2.06282,3.57826 1.73213,0.63036 3.6676,0.75621 5.58319,0.24293 4.57002,-1.22454 7.42714,-5.64598 6.81534,-10.21352 z"
+                          id="path74961"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 274.757,477.01376 a 1.005548,0.99447354 0 0 0 -1.00391,0.99415 v 0.88476 c -1.10746,0.39472 -1.92187,1.42097 -1.92187,2.64062 0,1.5666 1.3438,2.81641 2.92578,2.81641 0.54071,0 0.91602,0.38349 0.91602,0.82813 0,0.44462 -0.3753,0.82422 -0.91602,0.82422 -0.54071,0 -0.91602,-0.3796 -0.91602,-0.82422 a 1.005548,0.99447354 0 0 0 -1.00585,-0.9961 1.005548,0.99447354 0 0 0 -1.00391,0.9961 c 0,1.21965 0.81441,2.2459 1.92187,2.64062 v 0.88477 a 1.005548,0.99447354 0 0 0 1.00391,0.99414 1.005548,0.99447354 0 0 0 1.00586,-0.99414 v -0.88672 c 1.10669,-0.39534 1.92187,-1.41988 1.92187,-2.63867 0,-1.56661 -1.34574,-2.81641 -2.92773,-2.81641 -0.54071,0 -0.91602,-0.38352 -0.91602,-0.82813 10e-6,-0.44462 0.37532,-0.82422 0.91602,-0.82422 0.5407,0 0.91601,0.3796 0.91602,0.82422 a 1.005548,0.99447354 0 0 0 1.00586,0.9961 1.005548,0.99447354 0 0 0 1.00585,-0.9961 c 0,-1.21879 -0.81518,-2.24332 -1.92187,-2.63867 v -0.88671 a 1.005548,0.99447354 0 0 0 -1.00586,-0.99415 z"
+                          id="path74965"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999995;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">25.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 1,000.00</h5>
+                  <p class="mb-0">Rank Reward</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!--end row-->
+      <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-4">
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-success text-success bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-26,-305)">
+                        <path
+                          d="m 44.000048,328.67941 5.196153,3 L 39.196153,349 38.579267,344.06848 34,346 c 3.333351,-5.77353 6.666699,-11.54706 10.000048,-17.32059 z"
+                          id="path4783"
+                          style="color:#000000;fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 55.999976,328.67941 -5.196153,3 L 60.803871,349 61.420757,344.06848 66.000024,346 c -3.333351,-5.77353 -6.666699,-11.54706 -10.000048,-17.32059 z"
+                          id="path4789"
+                          style="color:#000000;fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path
+                          d="m 58.61151,332.64671 -1.093909,4.40936 -4.365569,-1.25732 -3.152031,3.27166 -3.152031,-3.27166 -4.365569,1.25732 -1.09391,-4.40936 -4.409356,-1.0939 1.257325,-4.36557 -3.27166,-3.15204 3.27166,-3.15203 -1.257325,-4.36557 4.409356,-1.0939 1.093909,-4.40936 4.365569,1.25732 L 50,309 l 3.152031,3.27166 4.365569,-1.25732 1.09391,4.40936 4.409356,1.0939 -1.257325,4.36557 3.27166,3.15203 -3.27166,3.15204 1.257325,4.36557 z"
+                          id="path789"
+                          style="fill:#e7e7e7;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 43.720703,313.0625 a 15.136557,15.136557 0 0 0 -1.777344,0.12695 l -0.554687,2.23438 -4.410156,1.09375 1.257812,4.36523 -3.271484,3.15235 3.271484,3.15234 -1.257812,4.36523 4.410156,1.09375 1.09375,4.41016 4.365234,-1.25781 3.152344,3.27148 3.152344,-3.27148 3.076172,0.88672 a 15.136557,15.136557 0 0 0 2.628906,-8.48633 15.136557,15.136557 0 0 0 -15.136719,-15.13672 z"
+                          id="path5647"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 57.99999,324.03521 c 0,4.41826 -3.58171,7.99998 -7.99998,7.99998 -4.41828,0 -8,-3.58172 -8,-7.99998 0,-4.41827 3.58172,-8 8,-8 4.41827,0 7.99998,3.58173 7.99998,8 z"
+                          id="path1540"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="M 48.648438,316.15039 C 44.874149,316.79295 42,320.07779 42,324.03516 c 0,3.95735 2.874149,7.2422 6.648438,7.88476 3.773341,-0.64334 6.646484,-3.92807 6.646484,-7.88476 0,-3.9567 -2.873143,-7.24143 -6.646484,-7.88477 z"
+                          id="path8683"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 50,317.77344 a 1.0057675,0.9942576 0 0 0 -1.005859,0.99609 v 0.86328 c -1.090652,0.39441 -1.894531,1.40627 -1.894531,2.60938 0,1.55135 1.333807,2.78711 2.90039,2.78711 0.52508,0 0.888672,0.36923 0.888672,0.79882 -10e-7,0.42962 -0.363602,0.79883 -0.888672,0.79883 -0.525074,0 -0.886718,-0.36921 -0.886719,-0.79883 a 1.0057675,0.9942576 0 0 0 -1.005859,-0.99413 1.0057675,0.9942576 0 0 0 -1.007812,0.99413 c 1e-6,1.20312 0.803877,2.21497 1.894531,2.60938 v 0.86328 A 1.0057675,0.9942576 0 0 0 50,330.29687 a 1.0057675,0.9942576 0 0 0 1.005859,-0.99609 v -0.86328 c 1.090653,-0.39441 1.894528,-1.40626 1.894531,-2.60938 0,-1.55134 -1.333808,-2.7871 -2.90039,-2.7871 -0.525083,0 -0.886719,-0.36921 -0.886719,-0.79883 0,-0.42961 0.36163,-0.79883 0.886719,-0.79883 0.525084,0 0.888672,0.36922 0.888672,0.79883 a 1.0057675,0.9942576 0 0 0 1.005859,0.99414 1.0057675,0.9942576 0 0 0 1.005859,-0.99414 c 0,-1.20312 -0.803879,-2.21497 -1.894531,-2.60938 v -0.86328 A 1.0057675,0.9942576 0 0 0 50,317.77344 Z"
+                          id="path4072"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999996;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">10.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 0.00</h5>
+                  <p class="mb-0">Royalty Reward</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+
+
+
+
+
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-danger text-danger bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-170.00002,-449)">
+                        <path
+                          d="m 184.70392,473.00002 c 0,-5.17422 4.19455,-9.36878 9.36878,-9.36878 5.17426,0 9.3688,4.19456 9.3688,9.36878 0,5.17424 -4.19454,9.3688 -9.3688,9.3688 -5.17423,0 -9.36878,-4.19456 -9.36878,-9.3688 z"
+                          id="path15077"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 194.07227,463.63086 c -5.17423,0 -9.36915,4.19493 -9.36915,9.36914 0,3.69473 2.14108,6.88889 5.24805,8.41406 5.40423,-1.26772 9.42969,-6.11538 9.42969,-11.90625 0,-1.71194 -0.35324,-3.34094 -0.98828,-4.82031 -1.29289,-0.67323 -2.76182,-1.05664 -4.32031,-1.05664 z"
+                          id="path73068"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 194.07227,465.74414 a 1.0055467,0.99447228 0 0 0 -1.00586,0.99415 v 1.15819 c -1.28997,0.4082 -2.25,1.57629 -2.25,2.97071 0,1.73866 1.49228,3.12696 3.25586,3.12696 0.72231,0 1.24414,0.52196 1.24414,1.13866 0,0.61669 -0.52183,1.13672 -1.24414,1.13672 -0.72232,0 -1.24414,-0.52003 -1.24414,-1.13672 a 1.0055467,0.99447228 0 0 0 -1.00586,-0.99414 1.0055467,0.99447228 0 0 0 -1.00586,0.99414 c 0,1.39442 0.96003,2.5625 2.25,2.9707 v 1.15821 a 1.0055467,0.99447228 0 0 0 1.00586,0.99414 1.0055467,0.99447228 0 0 0 1.00586,-0.99414 v -1.15821 c 1.28997,-0.4082 2.25,-1.57628 2.25,-2.9707 0,-1.73867 -1.49228,-3.12695 -3.25586,-3.12695 -0.72231,0 -1.24414,-0.522 -1.24414,-1.13867 0,-0.61669 0.52184,-1.13672 1.24414,-1.13672 0.7223,0 1.24414,0.52003 1.24414,1.13672 a 1.0055467,0.99447228 0 0 0 1.00586,0.99414 1.0055467,0.99447228 0 0 0 1.00586,-0.99414 c -10e-6,-1.39442 -0.96003,-2.56251 -2.25,-2.97071 v -1.15819 a 1.0055467,0.99447228 0 0 0 -1.00586,-0.99415 z"
+                          id="path15079"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.999994;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;-inkscape-stroke:none">
+                        </path>
+                        <path
+                          d="m 180.33008,482.27148 a 1,1 0 0 0 -0.47852,0.19532 1,1 0 0 0 -0.19336,1.40039 c 1.40759,1.85811 3.20221,3.47191 5.34375,4.70898 6.88822,3.979 15.33147,2.88481 20.97266,-2.14062 a 1,1 0 0 0 0.0801,-1.41211 1,1 0 0 0 -1.41016,-0.0801 c -5.0098,4.46296 -12.50234,5.44814 -18.64062,1.90234 -1.9084,-1.10238 -3.50161,-2.53501 -4.75196,-4.18554 a 1,1 0 0 0 -0.92187,-0.38868 z"
+                          id="path72837"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 210.39453,466.64648 a 1,1 0 0 0 -0.51758,0.0312 1,1 0 0 0 -0.63281,1.26563 c 1.33613,4.00415 1.09033,8.50574 -1.00781,12.50391 l -0.60938,-4 a 1,1 0 0 0 -1.13867,-0.83789 1,1 0 0 0 -0.83789,1.13867 l 1.02344,6.72851 a 1.0001,1.0001 0 0 0 1.35351,0.78125 l 6.33594,-2.47656 a 1,1 0 0 0 0.56836,-1.29492 1,1 0 0 0 -1.29492,-0.56836 l -3.60156,1.4082 c 2.33001,-4.47582 2.60361,-9.53177 1.10742,-14.01562 a 1,1 0 0 0 -0.74805,-0.66407 z"
+                          id="path72835"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 180.33594,461.67578 a 1.0001,1.0001 0 0 0 -0.29102,0.0664 l -6.33594,2.47656 a 1,1 0 0 0 -0.56836,1.29492 1,1 0 0 0 1.29688,0.56836 l 3.60156,-1.4082 c -2.54236,4.88358 -2.63652,10.45653 -0.65625,15.22656 a 1,1 0 0 0 1.3086,0.54102 1,1 0 0 0 0.53906,-1.3086 c -1.76744,-4.25735 -1.6831,-9.21894 0.60547,-13.58008 l 0.60937,4 a 1,1 0 0 0 1.13867,0.83789 1,1 0 0 0 0.8379,-1.13867 l -1.02344,-6.72851 a 1.0001,1.0001 0 0 0 -1.0625,-0.84766 z"
+                          id="path72833"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 194.19727,455.00977 c -0.69674,-0.004 -1.39071,0.0316 -2.08008,0.10742 -3.67668,0.40444 -7.19895,1.93455 -10.01953,4.44726 a 1,1 0 0 0 -0.0801,1.41211 1,1 0 0 0 1.41211,0.0801 c 5.0098,-4.46296 12.50233,-5.44814 18.64062,-1.90234 2.19845,1.26993 3.97723,2.97852 5.29688,4.95312 a 1,1 0 0 0 1.38672,0.27539 1,1 0 0 0 0.27539,-1.38672 c -1.48521,-2.22232 -3.49196,-4.14718 -5.95899,-5.57226 -2.79833,-1.61647 -5.85386,-2.39553 -8.87304,-2.41406 z"
+                          id="path15875"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">35.7%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 8,885.10</h5>
+                  <p class="mb-0">Total&nbsp;Reward</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-info text-info bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48 48" id="svg5" version="1.1" xml:space="preserve"
+                    xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-314.00003,-449)">
+                        <path d="m 319,463.48769 19,-10 19,10 z" id="rect24147"
+                          style="fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="M 331.48047,456.91933 319,463.48769 h 27.64648 a 21.191124,12.336339 0 0 0 -15.16601,-6.56836 z"
+                          id="ellipse84876"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path d="m 319,463.48769 h 38 v 4 h -38 z" id="rect24150"
+                          style="fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path d="m 319,463.48769 v 4 h 29.76172 a 21.191124,12.336339 0 0 0 -2.11524,-4 z"
+                          id="path84874"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path d="m 320,467.48769 h 8 l -2,3 v 12.98819 l 2,3.01181 h -8 l 2,-3.01401 v -12.98599 z"
+                          id="rect24154"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 348.00009,467.48769 h 8 l -2,3 v 12.98819 l 2,3.01181 h -8 l 2,-3.01401 v -12.98599 z"
+                          id="path24159"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 333.99991,467.48769 h 8 l -2,3 v 12.98819 l 2,3.01181 h -8 l 2,-3.01401 v -12.98599 z"
+                          id="path24171"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <ellipse cx="338" cy="459.4877" id="ellipse24173" rx="0.93075401" ry="0.92241609"
+                          style="fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </ellipse>
+                        <ellipse cx="341.38382" cy="459.4877" id="ellipse956" rx="0.93075401" ry="0.92241609"
+                          style="fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </ellipse>
+                        <ellipse cx="334.58218" cy="459.4877" id="ellipse958" rx="0.93075401" ry="0.92241609"
+                          style="fill:#ff5576;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </ellipse>
+                        <path d="m 319,486.48769 h 38 v 6 h -38 z" id="rect24152"
+                          style="fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path d="m 319,486.48769 v 3.16992 h 30.70312 a 3.68215,3.68215 0 0 0 3.60157,-3.16992 z"
+                          id="path88205"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--<p class="mb-0">25.6%</p>-->
+                  <!--<span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 8,698.00</h5>
+                  <p class="mb-0">Total&nbsp;Withdraw</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-orange-light text-orange bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg width="35px" height="35px" viewBox="0 0 48.000015 48.000015" id="svg5" version="1.1"
+                    xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg"
+                    fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <defs id="defs2"></defs>
+                      <g id="layer1" transform="translate(-98,-377)">
+                        <path
+                          d="m 131.16679,390.50001 c 0,5.24669 -4.25329,9.49998 -9.49999,9.49998 -5.24671,0 -9.50001,-4.25329 -9.50001,-9.49998 0,-5.2467 4.2533,-9.50001 9.50001,-9.50001 5.2467,0 9.49999,4.25331 9.49999,9.50001 z"
+                          id="path12476"
+                          style="fill:#f2a50c;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.00001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 121.6668,381 c -5.2467,0 -9.5,4.25331 -9.5,9.5 0,2.98361 1.37595,5.64508 3.52734,7.38672 0.53194,0.0924 1.07835,0.14258 1.63672,0.14258 5.2467,0 9.5,-4.25332 9.5,-9.5 0,-2.98362 -1.37595,-5.64508 -3.52734,-7.38672 C 122.77158,381.05016 122.22517,381 121.6668,381 Z"
+                          id="path48385"
+                          style="fill:#fcca3d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2.00001;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 121.6668,383.25 a 1.0057667,0.99425681 0 0 0 -1.00586,0.9961 v 1.15625 c -1.28954,0.40756 -2.25,1.57366 -2.25,2.96679 0,1.73708 1.49318,3.125 3.25586,3.125 0.72118,0 1.24219,0.5214 1.24219,1.13672 0,0.61534 -0.52103,1.13281 -1.24219,1.13281 -0.72117,0 -1.24414,-0.51747 -1.24414,-1.13281 a 1.0057667,0.99425681 0 0 0 -1.00391,-0.99609 1.0057667,0.99425681 0 0 0 -1.00781,0.99609 c 0,1.39313 0.96046,2.55924 2.25,2.9668 v 1.15625 a 1.0057667,0.99425681 0 0 0 1.00586,0.99609 1.0057667,0.99425681 0 0 0 1.00586,-0.99609 v -1.15625 c 1.28905,-0.40756 2.24804,-1.57367 2.24805,-2.9668 0,-1.73706 -1.49123,-3.125 -3.25391,-3.125 -0.72118,0 -1.24414,-0.52137 -1.24414,-1.13672 0,-0.61533 0.52296,-1.13281 1.24414,-1.13281 0.72118,0 1.24219,0.51748 1.24219,1.13281 a 1.0057667,0.99425681 0 0 0 1.00586,0.9961 1.0057667,0.99425681 0 0 0 1.00586,-0.9961 c 0,-1.39313 -0.959,-2.55923 -2.24805,-2.96679 V 384.2461 A 1.0057667,0.99425681 0 0 0 121.6668,383.25 Z"
+                          id="path12478"
+                          style="color:#000000;fill:#808b9b;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:0.99999;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                        <path
+                          d="m 140.29284,397.63849 c 0.51185,0 1.02354,0.19541 1.41407,0.58594 0.78104,0.78104 0.78104,2.04707 0,2.82812 l -5.65625,5.65625 -8.29297,8.29297 h -11.05078 l -2.91016,1.69141 c 0.0789,1.10821 -0.46192,2.21377 -1.49219,2.80859 l -2.59765,1.5 -8,-13.85547 2.59765,-1.5 c 1.43933,-0.831 3.26666,-0.34167 4.09766,1.09766 0,0 2.20899,-3.72852 5.20898,-3.72852 3,0 4.09571,0.98633 4.09571,0.98633 h 11.53906 c 1.0277,0 1.85351,0.892 1.85351,2 l 7.7793,-7.77734 c 0.39052,-0.39053 0.90222,-0.58594 1.41406,-0.58594 z"
+                          id="path32163"
+                          style="fill:#e7e7e7;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1">
+                        </path>
+                        <path
+                          d="m 140.29284,397.63849 c 0.51185,0 1.02354,0.19541 1.41407,0.58594 0.78104,0.78104 0.78104,2.04707 0,2.82812 l -5.65625,5.65625 -4.26368,4.26367 a 14.267931,15.294991 0 0 1 -1.65234,0.12696 14.267931,15.294991 0 0 1 -12.03906,-7.09766 h 11.15039 c 1.0277,0 1.85351,0.892 1.85351,2 l 7.7793,-7.77734 c 0.39052,-0.39053 0.90222,-0.58594 1.41406,-0.58594 z"
+                          id="path32165"
+                          style="fill:#fafafa;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4.1;stroke-opacity:1">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">25.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 3,114.90                  </h5>
+                  <p class="mb-0">Remaining </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div><!--end row-->
+
+
+
+
+      <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-4">
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-success text-success bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg version="1.1" id="_x34_" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" width="35px"
+                    height="35px" fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <g>
+                        <g>
+                          <g>
+                            <path style="fill:#DBDCDC;"
+                              d="M153.506,128.216v363.035H84.129V128.216c0-17.604,20.325-43.405,34.695-43.405 C133.176,84.812,153.506,110.612,153.506,128.216z">
+                            </path>
+                            <rect x="84.129" y="155.308" style="fill:#BCBCBB;" width="69.377" height="13.951"></rect>
+                            <rect x="84.129" y="241.741" style="fill:#BCBCBB;" width="69.377" height="13.933"></rect>
+                          </g>
+                          <g>
+                            <path style="fill:#DBDCDC;"
+                              d="M429.498,128.216v363.035H360.12V128.216c0-17.604,20.325-43.405,34.704-43.405 C409.181,84.812,429.498,110.612,429.498,128.216z">
+                            </path>
+                            <rect x="360.12" y="155.308" style="fill:#BCBCBB;" width="69.378" height="13.951"></rect>
+                            <rect x="360.12" y="241.741" style="fill:#BCBCBB;" width="69.378" height="13.933"></rect>
+                          </g>
+                        </g>
+                        <path style="fill:#DB471D;"
+                          d="M345.46,121.766v369.486H166.535V121.766C166.535,72.366,218.951,0,255.998,0 C293.054,0,345.46,72.366,345.46,121.766z">
+                        </path>
+                        <rect x="166.535" y="126.051" style="fill:#DF6548;" width="178.924" height="13.934"></rect>
+                        <rect x="166.535" y="216.645" style="fill:#DF6548;" width="178.924" height="13.942"></rect>
+                        <path style="fill:#FFFFFF;"
+                          d="M443.485,431.304c-1.279,13.39-8.107,18.744-19.03,20.348c-2.708,0.401-5.657,0.578-8.851,0.578 H96.391c-3.189,0-6.147-0.178-8.842-0.57c-10.936-1.612-17.765-6.966-19.034-20.356c-1.461-15.332,10.343-25.355,45.026-50.175 c38.218-27.368,83.516-60.821,89.266-128.813c0.397-4.748,0.61-9.657,0.61-14.762v-87.815c0-0.909,0.032-1.853,0.089-2.788 c1.474-27.555,24.415-65.516,52.491-65.516s51.021,37.961,52.495,65.516c0.054,0.935,0.08,1.879,0.08,2.788v87.815 c0,5.105,0.214,10.014,0.615,14.762c5.746,67.992,51.043,101.445,89.271,128.813C433.141,405.949,444.945,415.971,443.485,431.304z ">
+                        </path>
+                        <path style="fill:#BEDFE0;"
+                          d="M286.662,184.654c0,10.646-61.332,10.646-61.332,0c0-10.637,13.737-19.262,30.669-19.262 C272.934,165.392,286.662,174.016,286.662,184.654z">
+                        </path>
+                        <g>
+                          <polygon style="fill:#5A5553;"
+                            points="251.512,512 244.786,464.925 211.146,464.925 204.425,512 "></polygon>
+                          <polygon style="fill:#5A5553;"
+                            points="307.575,512 300.845,464.925 267.214,464.925 260.483,512 "></polygon>
+                        </g>
+                        <path style="fill:#DBDCDC;"
+                          d="M215.538,400.64c0,14.236-11.555,25.791-25.791,25.791c-14.24,0-25.791-11.555-25.791-25.791 c0-14.246,11.55-25.782,25.791-25.782C203.983,374.857,215.538,386.394,215.538,400.64z">
+                        </path>
+                        <rect x="205.115" y="438.279" style="fill:#FFFFFF;" width="101.761" height="29.265"></rect>
+                        <path style="fill:#5A5553;"
+                          d="M267.152,474.521c0,6.156-4.989,11.163-11.154,11.163l0,0c-6.161,0-11.153-5.007-11.153-11.163 v-90.604c0-6.164,4.993-11.153,11.153-11.153l0,0c6.165,0,11.154,4.989,11.154,11.153V474.521z">
+                        </path>
+                        <path style="fill:#5A5553;"
+                          d="M308.493,146.951H203.507c1.474-27.555,24.415-65.516,52.491-65.516 S307.019,119.396,308.493,146.951z">
+                        </path>
+                        <path style="fill:#5A5553;"
+                          d="M202.807,252.316v46.567c0,19.519-29.27,57.159-57.15,79.448 c-27.881,22.309-48.834,40.366-54.366,44.607c-8.183,6.281-12.361,17.773-3.741,28.722c-10.936-1.612-17.765-6.966-19.034-20.356 c-1.461-15.332,10.343-25.355,45.026-50.175C151.759,353.761,197.057,320.308,202.807,252.316z">
+                        </path>
+                        <path style="fill:#5A5553;"
+                          d="M309.188,252.316v46.567c0,19.519,29.278,57.159,57.15,79.448 c27.881,22.309,48.838,40.366,54.366,44.607c8.188,6.281,12.361,17.773,3.75,28.722c10.922-1.612,17.751-6.966,19.03-20.356 c1.461-15.332-10.343-25.355-45.026-50.175C360.236,353.761,314.935,320.308,309.188,252.316z">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">10.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 18,000.00</h5>
+                  <p class="mb-0">Referral Business</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-danger text-danger bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg height="35px" width="35px" version="1.1" id="_x34_" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"
+                    fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <g>
+                        <path style="fill:#DAD2C9;"
+                          d="M363.233,42.356c-0.953,6.324-5.024,13.079-12.473,19.143 c-24.426,19.749-32.569,36.033-34.647,41.144c-0.433,1.126-0.606,1.732-0.606,1.732H196.493c0,0-0.173-0.606-0.606-1.732 c-2.079-5.111-10.221-21.395-34.647-41.144c-0.26-0.173-0.433-0.347-0.606-0.52c-27.545-23.041-5.63-54.136,35.86-42.53 c1.992,0.52,3.811,0.953,5.457,1.213C224.211,22.954,218.408,0,256,0c40.451,0,30.663,26.505,59.507,18.45 c7.969-2.252,15.158-2.858,21.482-2.338C355.091,17.757,365.485,29.277,363.233,42.356z">
+                        </path>
+                        <path style="fill:#DAD2C9;"
+                          d="M443.095,324.905C443.095,428.24,359.335,512,256,512c-26.851,0-52.404-5.63-75.445-15.938 c-42.616-18.709-76.916-53.01-95.713-95.626c-10.221-23.127-15.938-48.679-15.938-75.531c0-97.445,94.154-171.85,123.084-198.268 c1.732-1.473,3.292-2.945,4.504-4.158h119.013c1.213,1.213,2.772,2.685,4.504,4.158 C348.941,153.055,443.095,227.459,443.095,324.905z">
+                        </path>
+                        <path style="fill:#E26F5C;"
+                          d="M328.932,114.856c0,5.717-3.811,10.394-8.921,11.781c-1.039,0.346-2.165,0.52-3.292,0.52H195.28 c-1.126,0-2.252-0.173-3.292-0.52c-5.11-1.386-8.921-6.063-8.921-11.781c0-6.756,5.457-12.213,12.213-12.213h121.439 C323.475,102.643,328.932,108.1,328.932,114.856z">
+                        </path>
+                        <path style="fill:#717171;"
+                          d="M313.486,380.722c-3.202,6.019-7.635,11.045-13.207,15.17c-5.601,4.095-12.314,7.149-20.127,9.171 c-3.41,0.853-6.98,1.448-10.609,1.943v22.715h-27.098v-22.269c-7.723-0.644-15.1-1.844-22.041-3.758 c-10.619-2.905-24.519-14.644-24.519-14.644c-1.19-0.683-1.974-1.904-2.132-3.252c-0.179-1.368,0.287-2.746,1.259-3.708 l13.583-13.583c1.468-1.467,3.728-1.735,5.503-0.664c0,0,10.163,8.834,17.857,10.916c7.704,2.102,15.348,3.163,22.983,3.163 c9.608,0,17.559-1.696,23.865-5.087c6.315-3.441,9.458-8.705,9.458-15.943c0-5.185-1.537-9.3-4.66-12.314 c-3.103-3.004-8.348-4.878-15.764-5.701l-24.331-2.092c-14.406-1.407-25.521-5.423-33.313-12.007 c-7.833-6.613-11.719-16.637-11.719-30.022c0-7.417,1.497-14.02,4.511-19.829c3.015-5.8,7.099-10.708,12.304-14.704 c5.205-4.005,11.273-7.02,18.174-8.992c2.875-0.853,5.909-1.398,8.982-1.893v-19.573h27.098v19.165 c6.335,0.624,12.354,1.636,17.965,3.183c9.498,2.578,19.492,10.4,19.492,10.4c1.259,0.664,2.103,1.884,2.32,3.262 c0.208,1.408-0.248,2.796-1.229,3.817l-12.74,12.929c-1.358,1.379-3.461,1.735-5.196,0.832c0,0-7.545-5.364-14.059-7.059 c-6.514-1.705-13.356-2.578-20.574-2.578c-9.41,0-16.369,1.814-20.861,5.413c-4.511,3.599-6.741,8.319-6.741,14.099 c0,5.215,1.576,9.221,4.798,12.027c3.193,2.796,8.586,4.62,16.221,5.393l21.307,1.835c15.814,1.378,27.781,5.582,35.882,12.581 c8.12,7,12.165,17.232,12.165,30.618C318.295,367.733,316.678,374.713,313.486,380.722z">
+                        </path>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">35.7%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  
+                  
+         
+ 
+                  <h5 class="mb-0">$ 64,000.00</h5>
+                  <p class="mb-0">Team&nbsp;Business</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-info text-info bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg height="35px" width="35px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"
+                    fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path style="fill:#A5EB78;"
+                        d="M512,255.999C512,114.615,397.385,0,256.001,0C114.615,0,0,114.615,0,255.999 S114.615,512,255.999,512S512,397.385,512,255.999z">
+                      </path>
+                      <path style="fill:#FFFFFF;"
+                        d="M392.039,158.815l-48.308,93.111c-1.325,2.554-1.325,5.594,0,8.148l48.308,93.111 c3.767,7.261-3.494,15.306-11.102,12.302L124.533,264.227c-7.462-2.947-7.462-13.508,0-16.456l256.405-101.258 C388.545,143.509,395.806,151.555,392.039,158.815z">
+                      </path>
+                      <path style="opacity:0.1;enable-background:new ;"
+                        d="M68.872,256.001c0-129.706,96.466-236.866,221.564-253.688 C279.172,0.798,267.68,0,256.001,0C114.615,0,0,114.615,0,256.001S114.615,512,256.001,512c11.68,0,23.171-0.798,34.436-2.313 C165.338,492.865,68.872,385.705,68.872,256.001z">
+                      </path>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--<p class="mb-0">25.6%</p>-->
+                  <!--<span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+
+
+                  <h5 class="mb-0">$ 32,000.00</h5>
+                  <p class="mb-0">Victory&nbsp;Wing</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <div class="card rounded-4">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between gap-3">
+                <div
+                  class="wh-48 d-flex bg-orange-light text-orange bg-opacity-10 align-items-center justify-content-center rounded-circle">
+                  <svg height="35px" width="35px" version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg"
+                    xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve"
+                    fill="#000000">
+                    <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
+                    <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                    <g id="SVGRepo_iconCarrier">
+                      <path style="fill:#A5EB78;"
+                        d="M256.001,512C397.385,512,512,397.385,512,255.999S397.385,0,256.001,0 C114.615,0,0,114.615,0,255.999C0,397.385,114.615,512,256.001,512z">
+                      </path>
+                      <path style="fill:#FFFFFF;"
+                        d="M119.962,158.815l48.308,93.111c1.325,2.554,1.325,5.594,0,8.148l-48.308,93.111 c-3.767,7.261,3.494,15.306,11.102,12.302l256.405-101.258c7.462-2.947,7.462-13.508,0-16.456L131.064,146.513 C123.455,143.509,116.194,151.555,119.962,158.815z">
+                      </path>
+                      <path style="opacity:0.1;enable-background:new ;"
+                        d="M68.872,256.001c0-129.706,96.466-236.866,221.564-253.688 C279.172,0.798,267.68,0,256.001,0C114.615,0,0,114.615,0,256.001S114.615,512,256.001,512c11.68,0,23.171-0.798,34.436-2.313 C165.338,492.865,68.872,385.705,68.872,256.001z">
+                      </path>
+                    </g>
+                  </svg>
+                </div>
+                <div class="">
+                  <!--<div class="d-flex align-items-center align-self-end text-success mb-1">-->
+                  <!--  <p class="mb-0">25.6%</p>-->
+                  <!--  <span class="material-icons-outlined">arrow_drop_up</span>-->
+                  <!--</div>-->
+                  <h5 class="mb-0">$ 32,000.00</h5>
+                  <p class="mb-0">Rising&nbsp;Wing </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card rounded-4 rounded-4 d-none">
+        <div class="card-body">
+          <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-2 g-3">
+            <div class="col">
+              <div class="card rounded-4 mb-0 border">
+                <div class="card-body">
+
+                  <div class="mt-4 text-center">
+                    <h4 class="mb-0 fw-light">3</h4>
+                    <p class="mb-0">My Referral</p>
+                  </div>
+                  <div class="d-flex_ align-items-center justify-content-end gap-1 mt-3">
+                    <p class="dash-lable d-flex_ text-center align-items-center gap-1 rounded mb-0 bg-success text-success bg-opacity-10"
+                      style="    width: 100%;">
+                      <!--<span class="material-icons-outlined fs-6">north</span>-->
+
+                      Active : 3                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col">
+              <div class="card rounded-4 mb-0 border">
+                <div class="card-body">
+
+                  <div class="mt-4 text-center">
+                    <h4 class="mb-0 fw-light">4,564</h4>
+                    <p class="mb-0">My Team</p>
+                  </div>
+                  <div class="d-flex_ align-items-center justify-content-end gap-1 mt-3">
+                    <p class="dash-lable d-flex_ text-center align-items-center gap-1 rounded mb-0 bg-success text-success bg-opacity-10"
+                      style="    width: 100%;">
+                      <!--<span class="material-icons-outlined fs-6">north</span>-->
+                      Active : 3,392                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+                      </div><!--end row-->
+        </div>
+      </div>
+
+      <div class="alert alert-danger border-0 bg-grd-danger alert-dismissible fade show">
+        <div class="d-flex align-items-center">
+          <div class="font-35 text-white">
+            <span class="material-icons-outlined fs-2">report_gmailerrorred</span>
+          </div>
+          <div class="ms-3">
+            <h6 class="mb-0 text-white">Flushout Reward</h6>
+            <div class="text-white">You have lost $ 0.00 due
+              to
+              flushout.</div>
+          </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
+
+
+      <div class="d-none col-xl-6 col-xxl-2 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between mb-1">
+              <div class="">
+                <h5 class="mb-0">42.5K</h5>
+                <p class="mb-0">Active Users</p>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                  data-bs-toggle="dropdown">
+                  <span class="material-icons-outlined fs-5">more_vert</span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="chart-container2">
+              <div id="chart1"></div>
+            </div>
+            <div class="text-center">
+              <p class="mb-0 font-12">24K users increased from last month</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-none col-xl-6 col-xxl-2 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <div class="">
+                <h5 class="mb-0">97.4K</h5>
+                <p class="mb-0">Total Users</p>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                  data-bs-toggle="dropdown">
+                  <span class="material-icons-outlined fs-5">more_vert</span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="chart-container2">
+              <div id="chart2"></div>
+            </div>
+            <div class="text-center">
+              <p class="mb-0 font-12"><span class="text-success me-1">12.5%</span> from last month</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-none col-xxl-4">
+        <div class="row">
+          <div class="col-md-6 d-flex align-items-stretch">
+            <div class="card w-100 rounded-4">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-1">
+                  <div class="">
+                    <h5 class="mb-0">82.7K</h5>
+                    <p class="mb-0">Total Clicks</p>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="chart-container2">
+                  <div id="chart3"></div>
+                </div>
+                <div class="text-center">
+                  <p class="mb-0 font-12"><span class="text-success me-1">12.5%</span> from last month</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-sm-6 d-flex align-items-stretch">
+            <div class="card w-100 rounded-4">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-1">
+                  <div class="">
+                    <h5 class="mb-0">68.4K</h5>
+                    <p class="mb-0">Total Views</p>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                </div>
+                <div class="chart-container2">
+                  <div id="chart4"></div>
+                </div>
+                <div class="text-center">
+                  <p class="mb-0 font-12">35K users increased from last month</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-3 mb-2">
+              <div class="">
+                <h3 class="mb-0">85,247</h3>
+              </div>
+              <div class="flex-grow-0">
+                <p
+                  class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-success text-success bg-opacity-10">
+                  <span class="material-icons-outlined fs-6">arrow_downward</span>23.7%
+                </p>
+              </div>
+            </div>
+            <p class="mb-0">Total Accounts</p>
+            <div id="chart7"></div>
+          </div>
+        </div>
+      </div>
+      <div class="d-none col-xl-6 col-xxl-4 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <div class="">
+                <h6 class="mb-0 fw-bold">Campaign Stats</h6>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                  data-bs-toggle="dropdown">
+                  <span class="material-icons-outlined fs-5">more_vert</span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                </ul>
+              </div>
+            </div>
+
+            <ul class="list-group list-group-flush">
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-primary">
+                    <span class="material-icons-outlined text-white">calendar_today</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Campaigns</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">54</p>
+                    <p class="mb-0 fw-bold text-success">28%</p>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-success">
+                    <span class="material-icons-outlined text-white">email</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Emailed</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">245</p>
+                    <p class="mb-0 fw-bold text-danger">15%</p>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-branding">
+                    <span class="material-icons-outlined text-white">open_in_new</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Opened</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">54</p>
+                    <p class="mb-0 fw-bold text-success">30.5%</p>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-warning">
+                    <span class="material-icons-outlined text-white">ads_click</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Clicked</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">859</p>
+                    <p class="mb-0 fw-bold text-danger">34.6%</p>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-info">
+                    <span class="material-icons-outlined text-white">subscriptions</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Subscribed</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">24,758</p>
+                    <p class="mb-0 fw-bold text-success">53%</p>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-danger">
+                    <span class="material-icons-outlined text-white">inbox</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Spam Message</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">548</p>
+                    <p class="mb-0 fw-bold text-danger">47%</p>
+                  </div>
+                </div>
+              </li>
+              <li class="list-group-item px-0 bg-transparent">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-grd-deep-blue">
+                    <span class="material-icons-outlined text-white">visibility</span>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Views Mails</h6>
+                  </div>
+                  <div class="d-flex align-items-center gap-3">
+                    <p class="mb-0">9845</p>
+                    <p class="mb-0 fw-bold text-success">68%</p>
+                  </div>
+                </div>
+              </li>
+            </ul>
+
+          </div>
+        </div>
+      </div>
+      <div class="d-none col-xl-6 col-xxl-4 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-body">
+            <div id="chart8"></div>
+            <div class="d-flex align-items-center gap-3 mt-4">
+              <div class="">
+                <h1 class="mb-0">36.7%</h1>
+              </div>
+              <div class="d-flex align-items-center align-self-end gap-2">
+                <span class="material-icons-outlined text-success">trending_up</span>
+                <p class="mb-0 text-success">34.5%</p>
+              </div>
+            </div>
+            <p class="mb-4">Visitors Growth</p>
+            <div class="d-flex flex-column gap-3">
+              <div class="">
+                <p class="mb-1">Cliks <span class="float-end">2589</span></p>
+                <div class="progress" style="height: 5px;">
+                  <div class="progress-bar bg-grd-primary" style="width: 65%"></div>
+                </div>
+              </div>
+              <div class="">
+                <p class="mb-1">Likes <span class="float-end">6748</span></p>
+                <div class="progress" style="height: 5px;">
+                  <div class="progress-bar bg-grd-warning" style="width: 55%"></div>
+                </div>
+              </div>
+              <div class="">
+                <p class="mb-1">Upvotes <span class="float-end">9842</span></p>
+                <div class="progress" style="height: 5px;">
+                  <div class="progress-bar bg-grd-info" style="width: 45%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-none col-xl-6 col-xxl-4 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <div class="">
+                <h5 class="mb-0 fw-bold">Social Leads</h5>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                  data-bs-toggle="dropdown">
+                  <span class="material-icons-outlined fs-5">more_vert</span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="d-flex flex-column justify-content-between gap-4">
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/17.png" width="32" alt="">
+                  <p class="mb-0">Facebook</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">55%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#0d6efd", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/18.png" width="32" alt="">
+                  <p class="mb-0">LinkedIn</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">67%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#fc185a", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/19.png" width="32" alt="">
+                  <p class="mb-0">Instagram</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">78%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#02c27a", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/20.png" width="32" alt="">
+                  <p class="mb-0">Snapchat</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">46%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#fd7e14", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/05.png" width="32" alt="">
+                  <p class="mb-0">Google</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">38%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#0dcaf0", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/08.png" width="32" alt="">
+                  <p class="mb-0">Altaba</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">15%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#6f42c1", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-4">
+                <div class="d-flex align-items-center gap-3 flex-grow-1">
+                  <img src="assets/images/apps/07.png" width="32" alt="">
+                  <p class="mb-0">Spotify</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 fs-6">12%</p>
+                </div>
+                <div class="">
+                  <p class="mb-0 data-attributes">
+                    <span
+                      data-peity='{ "fill": ["#ff00b3", "rgb(255 255 255 / 10%)"], "innerRadius": 14, "radius": 18 }'>5/7</span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="d-none col-xl-6 col-xxl-4 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-header border-0 p-3 border-bottom">
+            <div class="d-flex align-items-start justify-content-between">
+              <div class="">
+                <h5 class="mb-0">New Users</h5>
+              </div>
+              <div class="dropdown">
+                <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                  data-bs-toggle="dropdown">
+                  <span class="material-icons-outlined fs-5">more_vert</span>
+                </a>
+                <ul class="dropdown-menu">
+                  <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                  <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          <div class="card-body p-0">
+            <div class="user-list p-3">
+              <div class="d-flex flex-column gap-3">
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/01.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Elon Jonado</h6>
+                    <p class="mb-0">elon_deo</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/02.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Alexzender Clito</h6>
+                    <p class="mb-0">zli_alexzender</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/03.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Michle Tinko</h6>
+                    <p class="mb-0">tinko_michle</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/04.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">KailWemba</h6>
+                    <p class="mb-0">wemba_kl</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/05.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Henhco Tino</h6>
+                    <p class="mb-0">Henhco_tino</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/06.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Gonjiko Fernando</h6>
+                    <p class="mb-0">gonjiko_fernando</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                  <img src="assets/images/avatars/08.png" width="45" height="45" class="rounded-circle" alt="">
+                  <div class="flex-grow-1">
+                    <h6 class="mb-0">Specer Kilo</h6>
+                    <p class="mb-0">specer_kilo</p>
+                  </div>
+                  <div class="form-check form-check-inline me-0">
+                    <input class="form-check-input ms-0" type="checkbox">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card-footer bg-transparent p-3">
+            <div class="d-flex align-items-center justify-content-between gap-3">
+              <a href="javascript:;" class="sharelink"><i class="material-icons-outlined">share</i></a>
+              <a href="javascript:;" class="sharelink"><i class="material-icons-outlined">textsms</i></a>
+              <a href="javascript:;" class="sharelink"><i class="material-icons-outlined">email</i></a>
+              <a href="javascript:;" class="sharelink"><i class="material-icons-outlined">attach_file</i></a>
+              <a href="javascript:;" class="sharelink"><i class="material-icons-outlined">event</i></a>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-lg-12 col-xxl-12 d-flex align-items-stretch">
+        <div class="card w-100 rounded-4">
+          <div class="card-body">
+            <div class="d-flex align-items-start justify-content-between mb-3">
+              <div class="">
+                <h5 class="mb-0">Recent Transaction</h5>
+              </div>
+
+            </div>
+
+            <div class="table-responsive">
+              <table class="table align-middle">
+                <thead>
+                  <tr>
+
+                    <th>Date</th>
+                    <th>Wallet</th>
+                    <th>Txn Mode</th>
+                    <th>Amount</th>
+                    <th>Description</th>
+                  </tr>
+                </thead>
+                <tbody>
+
+
+
+
+
+                  
+
+
+
+                      <tr>
+                        <!--<th scope="row">1</th>-->
+                        <td>07-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 67.20</td>
+                        <td>Daily closing statement [ : 07-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">2</th>-->
+                        <td>06-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 60.10</td>
+                        <td>Daily closing statement [ : 06-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">3</th>-->
+                        <td>06-Sep-2026 09:37 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-danger">Debit</span>                        </td>
+                        <td>$ 150.00</td>
+                        <td>Withdrawal Request | Crypto Wallet Address: 0x6E8fD80B07BE01FD47bf3b2d47B8048e65c4A698</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">4</th>-->
+                        <td>05-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 58.60</td>
+                        <td>Daily closing statement [ : 05-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">5</th>-->
+                        <td>05-Sep-2026 09:09 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-danger">Debit</span>                        </td>
+                        <td>$ 1,000.00</td>
+                        <td>Withdrawal Request | Crypto Wallet Address: 0x6E8fD80B07BE01FD47bf3b2d47B8048e65c4A698</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">6</th>-->
+                        <td>04-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 58.60</td>
+                        <td>Daily closing statement [ : 04-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">7</th>-->
+                        <td>03-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 58.60</td>
+                        <td>Daily closing statement [ : 03-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">8</th>-->
+                        <td>02-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 58.60</td>
+                        <td>Daily closing statement [ : 02-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">9</th>-->
+                        <td>01-Sep-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 808.60</td>
+                        <td>Daily closing statement [ : 01-Sep-2026]</td>
+
+
+                      </tr>
+                      
+
+
+
+                      <tr>
+                        <!--<th scope="row">10</th>-->
+                        <td>31-Aug-2026 12:00 AM</td>
+                        <td>
+                          <span class="badge bg-grd-primary">E-wallet</span>                        </td>
+                        <td>
+                          <span class="badge bg-grd-success">Credit</span>                        </td>
+                        <td>$ 55.60</td>
+                        <td>Daily closing statement [ : 31-Aug-2026]</td>
+
+
+                      </tr>
+                      
+
+
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bootstrap Icons CDN -->
+      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+      <div class="card rounded-4">
+        <div class="card-body">
+          <div class="text-center mb-4">
+            <h4 class="mb-1">Share Your Referral Link</h4>
+            <p class="text-muted small">Invite friends and earn rewards. Choose Left or Right side below.</p>
+          </div>
+ <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="mb-0">  Referral Link</h6>
+              <div class="d-flex gap-2">
+                <!-- WhatsApp Share -->
+                <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                  <a href="https://api.whatsapp.com/send?text=Join+and+earn+unlimited+with+Rich+Makers+https%3A%2F%2Fapp.richmakers.space%2Fsign-up%2FR625263"
+                    target="_blank"
+                    class="btn btn-sm btn-success rounded-circle  wh-40 border   d-flex align-items-center justify-content-center">
+                    <i class="bi bi-whatsapp fs-5"></i>
+                  </a>
+                </div>
+                <!-- Copy Link -->
+                <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                  <button onclick="copyToClipboard('myReferralInputLeft')"
+                    class="wh-40 border text-white rounded-circle d-flex align-items-center justify-content-center">
+                    <i class="bi bi-clipboard fs-5"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <input type="text" readonly class="form-control form-control-sm" id="myReferralInputLeft"
+              value="https://app.richmakers.space/sign-up/R625263">
+          </div>
+         
+                 </div>
+      </div>
+
+      <script>
+        function copyToClipboard(elementId) {
+          const input = document.getElementById(elementId);
+          input.select();
+          input.setSelectionRange(0, 99999); // For mobile
+          document.execCommand("copy");
+        }
+      </script>
+
+
+
+    </div>
+    <!-- ===== modal with guaranteed visible close button ===== -->
+    <style>
+      /* make sure modal-content can show absolutely-positioned children */
+      #imageModal .modal-content {
+        background: transparent !important;
+        border: 0 !important;
+        overflow: visible !important;
+      }
+
+      /* container to allow absolute positioning over the image */
+      #imageModal .modal-body {
+        padding: 0;
+        position: relative;
+      }
+
+      /* the image */
+      #imageModal .modal-body img {
+        display: block;
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* visible floating close button on top-right of the image */
+      .image-close-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        z-index: 99999;
+        /* very high so it stays on top */
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: none;
+        background: rgba(0, 0, 0, 0.6);
+        color: #fff;
+        font-size: 20px;
+        line-height: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+      }
+
+      .image-close-btn:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.08);
+      }
+
+      @media (max-width:576px) {
+        .image-close-btn {
+          width: 34px;
+          height: 34px;
+          font-size: 18px;
+          top: 8px;
+          right: 8px;
+        }
+      }
+    </style>
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body text-center">
+            <!-- visible close button (works even if Bootstrap close styles are missing) -->
+            <button id="modalCloseBtn" class="image-close-btn" aria-label="Close" data-bs-dismiss="modal"
+              data-dismiss="modal">&times;</button>
+
+            <!-- your image -->
+            <img src="https://app.richmakers.space/uploads/system/1788754573_4cadec69f4a7d62cc9da.jpg" alt="Preview image" class="img-fluid rounded shadow" style="    width: 100%;">
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        var modalEl = document.getElementById('imageModal');
+        var bsModal = null;
+
+        // Try to use Bootstrap 5's JS if present
+        if (window.bootstrap && bootstrap.Modal) {
+          try {
+            bsModal = new bootstrap.Modal(modalEl);
+            bsModal.show();
+          } catch (e) {
+            console.warn('Bootstrap modal.show() failed, using fallback display.', e);
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            document.body.classList.add('modal-open');
+            var bd = document.createElement('div'); bd.className = 'modal-backdrop fade show'; document.body.appendChild(bd);
+          }
+        } else {
+          // Fallback if Bootstrap JS isn't available
+          modalEl.classList.add('show');
+          modalEl.style.display = 'block';
+          document.body.classList.add('modal-open');
+          var bd = document.createElement('div'); bd.className = 'modal-backdrop fade show'; document.body.appendChild(bd);
+        }
+
+        // Close handler: prefer Bootstrap API, else manual fallback
+        document.getElementById('modalCloseBtn').addEventListener('click', function () {
+          if (bsModal && bsModal.hide) {
+            bsModal.hide();
+          } else {
+            modalEl.classList.remove('show');
+            modalEl.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            var backdrop = document.querySelector('.modal-backdrop'); if (backdrop) backdrop.remove();
+          }
+        });
+
+        // DEBUG: uncomment to check presence in console
+        // console.log('close btn element:', document.getElementById('modalCloseBtn'));
+      });
+    </script> 
+
+
+  </div>
+</main>
+
+
+  <!--end main wrapper-->
+
+  <!--start overlay-->
+     <div class="overlay btn-toggle"></div>
+  <!--end overlay-->
+   
+   <!--start footer-->
+   <footer class="page-footer">
+    <p class="mb-0">Copyright © 2026. All right reserved.</p>
+  </footer>
+  <!--end footer-->
+
+  <!--start cart-->
+  <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasCart">
+    <div class="offcanvas-header border-bottom h-70">
+      <h5 class="mb-0" id="offcanvasRightLabel">8 New Orders</h5>
+      <a href="javascript:;" class="primaery-menu-close" data-bs-dismiss="offcanvas">
+        <i class="material-icons-outlined">close</i>
+      </a>
+    </div>
+    <div class="offcanvas-body p-0">
+      <div class="order-list">
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/01.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">White Men Shoes</h5>
+            <p class="mb-0 order-price">$289</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/02.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Red Airpods</h5>
+            <p class="mb-0 order-price">$149</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/03.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Men Polo Tshirt</h5>
+            <p class="mb-0 order-price">$139</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/04.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Blue Jeans Casual</h5>
+            <p class="mb-0 order-price">$485</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/05.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Fancy Shirts</h5>
+            <p class="mb-0 order-price">$758</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/06.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Home Sofa Set </h5>
+            <p class="mb-0 order-price">$546</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/07.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Black iPhone</h5>
+            <p class="mb-0 order-price">$1049</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+
+        <div class="order-item d-flex align-items-center gap-3 p-3 border-bottom">
+          <div class="order-img">
+            <img src="assets/images/orders/08.png" class="img-fluid rounded-3" width="75" alt="">
+          </div>
+          <div class="order-info flex-grow-1">
+            <h5 class="mb-1 order-title">Goldan Watch</h5>
+            <p class="mb-0 order-price">$689</p>
+          </div>
+          <div class="d-flex">
+            <a class="order-delete"><span class="material-icons-outlined">delete</span></a>
+            <a class="order-delete"><span class="material-icons-outlined">visibility</span></a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="offcanvas-footer h-70 p-3 border-top">
+      <div class="d-grid">
+        <button type="button" class="btn btn-grd btn-grd-primary" data-bs-dismiss="offcanvas">View Products</button>
+      </div>
+    </div>
+  </div>
+  <!--end cart-->
+
+
+
+  <!--start switcher-->
+  <!--<button class="btn btn-grd btn-grd-primary position-fixed bottom-0 end-0 m-3 d-flex align-items-center gap-2" type="button" data-bs-toggle="offcanvas" data-bs-target="#staticBackdrop">-->
+  <!--  <i class="material-icons-outlined">tune</i>Customize-->
+  <!--</button>-->
+  
+  <div class="offcanvas offcanvas-end" data-bs-scroll="true" tabindex="-1" id="staticBackdrop">
+    <div class="offcanvas-header border-bottom h-70">
+      <div class="">
+        <h5 class="mb-0">Theme Customizer</h5>
+        <p class="mb-0">Customize your theme</p>
+      </div>
+      <a href="javascript:;" class="primaery-menu-close" data-bs-dismiss="offcanvas">
+        <i class="material-icons-outlined">close</i>
+      </a>
+    </div>
+    <div class="offcanvas-body">
+      <div>
+        <p>Theme variation</p>
+
+        <div class="row g-3">
+          <div class="col-12 col-xl-6">
+            <input type="radio" class="btn-check" name="theme-options" id="BlueTheme" checked>
+            <label class="btn btn-outline-secondary d-flex flex-column gap-1 align-items-center justify-content-center p-4" for="BlueTheme">
+              <span class="material-icons-outlined">contactless</span>
+              <span>Blue</span>
+            </label>
+          </div>
+          <div class="col-12 col-xl-6">
+            <input type="radio" class="btn-check" name="theme-options" id="LightTheme">
+            <label class="btn btn-outline-secondary d-flex flex-column gap-1 align-items-center justify-content-center p-4" for="LightTheme">
+              <span class="material-icons-outlined">light_mode</span>
+              <span>Light</span>
+            </label>
+          </div>
+          <div class="col-12 col-xl-6">
+            <input type="radio" class="btn-check" name="theme-options" id="DarkTheme">
+            <label class="btn btn-outline-secondary d-flex flex-column gap-1 align-items-center justify-content-center p-4" for="DarkTheme">
+              <span class="material-icons-outlined">dark_mode</span>
+              <span>Dark</span>
+            </label>
+          </div>
+          <div class="col-12 col-xl-6">
+            <input type="radio" class="btn-check" name="theme-options" id="SemiDarkTheme">
+            <label class="btn btn-outline-secondary d-flex flex-column gap-1 align-items-center justify-content-center p-4" for="SemiDarkTheme">
+              <span class="material-icons-outlined">contrast</span>
+              <span>Semi Dark</span>
+            </label>
+          </div>
+          <div class="col-12 col-xl-6">
+            <input type="radio" class="btn-check" name="theme-options" id="BoderedTheme">
+            <label class="btn btn-outline-secondary d-flex flex-column gap-1 align-items-center justify-content-center p-4" for="BoderedTheme">
+              <span class="material-icons-outlined">border_style</span>
+              <span>Bordered</span>
+            </label>
+          </div>
+        </div><!--end row-->
+
+      </div>
+    </div>
+  </div>
+  <!--start switcher-->
+
+  <!--bootstrap js-->
+  <script src="https://app.richmakers.space/app/js/bootstrap.bundle.min.js"></script>
+
+  <!--plugins-->
+  <script src="https://app.richmakers.space/app/js/jquery.min.js"></script>
+  <!--plugins-->
+  <script src="https://app.richmakers.space/app/plugins/perfect-scrollbar/js/perfect-scrollbar.js"></script>
+  <script src="https://app.richmakers.space/app/plugins/metismenu/metisMenu.min.js"></script>
+  <script src="https://app.richmakers.space/app/plugins/apexchart/apexcharts.min.js"></script>
+  <script src="https://app.richmakers.space/app/plugins/simplebar/js/simplebar.min.js"></script>
+  <script src="https://app.richmakers.space/app/plugins/peity/jquery.peity.min.js"></script>
+  <script>
+    $(".data-attributes span").peity("donut")
+  </script>
+  <script src="https://app.richmakers.space/app/js/main.js"></script>
+  <script src="https://app.richmakers.space/app/js/dashboard1.js"></script>
+  <script>
+	   new PerfectScrollbar(".user-list")
+  </script>
+  <script>
+                 function copyTextValue(InputId)
+                                {
+                                        var copyText = document.getElementById(InputId);
+                                        copyText.type = 'text';
+                                        copyText.select();
+                                        document.execCommand("copy");
+                                        // copyText.type = 'hidden';
+                                        // alert( 'Successfully copy your referral Link.');
+                                }  
+            </script> 
+</body>
+
+
+ 
+</html>
+  
