@@ -1,206 +1,481 @@
+import asyncio
 import os
 import re
-from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+from html import escape
+from typing import Dict, List
+
 import requests
+from bs4 import BeautifulSoup
+from playwright.async_api import (
+    async_playwright,
+    TimeoutError as PlaywrightTimeoutError,
+)
 
-# Global Configuration
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-LOGIN_URL = os.getenv("RM_LOGIN_URL", "https://app.richmakers.space")
-DASHBOARD_URL = os.getenv("RM_DASHBOARD_URL", "https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344")
+
+LOGIN_URL = os.getenv(
+    "LOGIN_URL",
+    "https://app.richmakers.space/",
+).strip()
+
+DASHBOARD_URL = (
+    "https://app.richmakers.space/member/"
+    "6e4c797573632532425a6f4a77253344/"
+    "6e62756c736463253344"
+)
+
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
 
 
-def load_accounts_from_env() -> list[dict]:
-    """Dynamically parses RM_USER_1, RM_PASS_1, RM_USER_2, RM_PASS_2, etc.,
+def clean_text(text: str) -> str:
+    return re.sub(r"\s+", " ", text or "").strip()
 
-    from environment variables into an ACCOUNTS array.
-    """
-    accounts_map = {}
 
-    # Inspect all environment variables for numbered user/pass combinations
-    for key, val in os.environ.items():
-        user_match = re.match(r"^RM_USER_(\d+)$", key)
-        pass_match = re.match(r"^RM_PASS_(\d+)$", key)
+def extract_money(text: str) -> str:
+    text = clean_text(text)
 
-        if user_match:
-            idx = user_match.group(1)
-            accounts_map.setdefault(idx, {})["username"] = val
-        elif pass_match:
-            idx = pass_match.group(1)
-            accounts_map.setdefault(idx, {})["password"] = val
+    match = re.search(
+        r"(?:[$₹€£]\s*[\d,]+(?:\.\d{2})?|[\d,]+\.\d{2})",
+        text,
+    )
 
-    # Sort by index (1, 2, 3...) and filter out incomplete credentials
+    return match.group(0) if match else text
+
+
+def load_accounts():
     accounts = []
-    for idx in sorted(accounts_map.keys(), key=int):
-        acc = accounts_map[idx]
-        if acc.get("username") and acc.get("password"):
-            accounts.append(acc)
+    index = 1
 
-    # Fallback to single account variables if numbered ones aren't set
+    while True:
+        username = os.getenv(f"RM_USER_{index}")
+        password = os.getenv(f"RM_PASS_{index}")
+
+        if username is None and password is None:
+            break
+
+        if not username or not password:
+            raise RuntimeError(
+                f"RM_USER_{index} and RM_PASS_{index} "
+                "must both be configured."
+            )
+
+        accounts.append(
+            {
+                "username": username.strip(),
+                "password": password,
+            }
+        )
+
+        index += 1
+
     if not accounts:
-        single_user = os.getenv("RM_USERNAME")
-        single_pass = os.getenv("RM_PASSWORD")
-        if single_user and single_pass:
-            accounts.append({"username": single_user, "password": single_pass})
+        raise RuntimeError(
+            "No valid account credentials found. "
+            "Expected RM_USER_1 and RM_PASS_1."
+        )
 
     return accounts
 
 
-ACCOUNTS = load_accounts_from_env()
+def parse_dashboard_html(html: str) -> dict:
+    soup = BeautifulSoup(html, "html.parser")
 
-
-def send_telegram_notification(message: str):
-    """Sends notification to Telegram if credentials exist."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Telegram credentials missing. Skipping notification.")
-        return
-
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
-        "parse_mode": "Markdown",
+    result = {
+        "username": "Not found",
+        "rank": "Not found",
+        "e_wallet": "Not found",
+        "active_investment": "Not found",
+        "revenue_reward": "Not found",
+        "direct_reward": "Not found",
+        "level_bonus": "Not found",
+        "rank_reward": "Not found",
+        "royalty_reward": "Not found",
+        "total_reward": "Not found",
+        "total_withdraw": "Not found",
+        "remaining": "Not found",
+        "recent_transactions": [],
     }
-    try:
-        res = requests.post(url, json=payload, timeout=10)
-        res.raise_for_status()
-    except Exception as e:
-        print(f"Failed to send Telegram notification: {e}")
 
+    # Extract username, for example: R625263 !
+    for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
+        text = clean_text(heading.get_text(" ", strip=True))
 
-def parse_dashboard_html(html_content: str) -> dict:
-    """Parses extracted HTML content using BeautifulSoup."""
-    soup = BeautifulSoup(html_content, "html.parser")
-    details = {}
+        if text.endswith("!") and len(text) < 100:
+            result["username"] = text.replace("!", "").strip()
+            break
 
-    # 1. User ID
-    user_name_elem = soup.find(class_="user-name")
-    if user_name_elem:
-        match = re.search(r"R\d+", user_name_elem.get_text())
-        if match:
-            details["user_id"] = match.group(0)
+    # Extract rank
+    rank_badge = soup.select_one(".rank-badge")
 
-    # 2. Current Rank
-    rank_elem = soup.find(class_="rank-badge")
-    if rank_elem:
-        details["rank"] = rank_elem.get_text(strip=True)
+    if rank_badge:
+        result["rank"] = clean_text(
+            rank_badge.get_text(" ", strip=True)
+        )
 
-    # 3. Active Investment
-    active_inv_elem = soup.find(string=re.compile("Active Investment"))
-    if active_inv_elem:
-        parent = active_inv_elem.find_parent("div", class_="ms-3")
-        if parent:
-            match = re.search(r"\$\s*([\d,]+\.?\d*)", parent.get_text())
-            if match:
-                details["active_investment"] = float(
-                    match.group(1).replace(",", "")
+    # Extract E-wallet
+    for paragraph in soup.find_all("p"):
+        label = clean_text(
+            paragraph.get_text(" ", strip=True)
+        ).lower()
+
+        if label == "e-wallet":
+            parent = paragraph.parent
+
+            if parent:
+                heading = parent.find("h5")
+
+                if heading:
+                    result["e_wallet"] = extract_money(
+                        heading.get_text(" ", strip=True)
+                    )
+
+            break
+
+    # Extract Active Investment
+    for heading in soup.find_all(["h5", "h6"]):
+        label = clean_text(
+            heading.get_text(" ", strip=True)
+        ).lower()
+
+        if label == "active investment":
+            container = heading.parent
+
+            if container:
+                text = clean_text(
+                    container.get_text(" ", strip=True)
                 )
 
-    # 4. Wallet Balances
-    wallet_containers = soup.find_all("div", class_="progress")
-    for progress in wallet_containers:
-        parent_div = progress.find_parent("div")
-        if parent_div:
-            label_elem = parent_div.find("p")
-            val_elem = parent_div.find("h5")
-            if label_elem and val_elem:
-                label = label_elem.get_text(strip=True).lower()
-                val_match = re.search(r"\$\s*([\d,]+\.?\d*)", val_elem.get_text())
-                if val_match:
-                    amount = float(val_match.group(1).replace(",", ""))
-                    if "e-wallet" in label:
-                        details["e_wallet_balance"] = amount
-                    elif "a-wallet" in label:
-                        details["a_wallet_balance"] = amount
+                match = re.search(
+                    r"invested\s+([$₹€£]?\s*[\d,]+(?:\.\d{2})?)",
+                    text,
+                    re.IGNORECASE,
+                )
 
-    # 5. Reward / Bonus Cards
-    cards = soup.find_all("div", class_="card")
-    for card in cards:
-        h5_elem = card.find("h5")
-        p_elem = card.find("p")
-        if h5_elem and p_elem:
-            label = p_elem.get_text(strip=True)
-            val_match = re.search(r"\$\s*([\d,]+\.?\d*)", h5_elem.get_text())
-            if val_match:
-                amount = float(val_match.group(1).replace(",", ""))
-                key = label.lower().replace(" ", "_")
-                details[key] = amount
+                if match:
+                    result["active_investment"] = extract_money(
+                        match.group(1)
+                    )
 
-    return details
+            break
+
+    # Extract reward and balance cards
+    label_mapping = {
+        "revenue reward": "revenue_reward",
+        "direct reward": "direct_reward",
+        "level bonus": "level_bonus",
+        "rank reward": "rank_reward",
+        "royalty reward": "royalty_reward",
+        "total reward": "total_reward",
+        "total withdraw": "total_withdraw",
+        "remaining": "remaining",
+    }
+
+    for paragraph in soup.find_all("p"):
+        label = clean_text(
+            paragraph.get_text(" ", strip=True)
+        ).lower()
+
+        label = label.replace("\xa0", " ")
+
+        if label not in label_mapping:
+            continue
+
+        field_name = label_mapping[label]
+        card_body = paragraph.find_parent(class_="card-body")
+
+        if not card_body:
+            continue
+
+        value_heading = card_body.find("h5")
+
+        if value_heading:
+            result[field_name] = extract_money(
+                value_heading.get_text(" ", strip=True)
+            )
+
+    # Extract Recent Transaction table
+    transaction_heading = None
+
+    for heading in soup.find_all(["h4", "h5", "h6"]):
+        heading_text = clean_text(
+            heading.get_text(" ", strip=True)
+        ).lower()
+
+        if heading_text == "recent transaction":
+            transaction_heading = heading
+            break
+
+    if transaction_heading:
+        transaction_card = transaction_heading.find_parent(
+            class_="card"
+        )
+
+        if transaction_card:
+            table = transaction_card.find("table")
+
+            if table:
+                tbody = table.find("tbody")
+
+                if tbody:
+                    for row in tbody.find_all("tr"):
+                        cells = [
+                            clean_text(
+                                cell.get_text(" ", strip=True)
+                            )
+                            for cell in row.find_all("td")
+                        ]
+
+                        if len(cells) >= 5:
+                            result["recent_transactions"].append(
+                                {
+                                    "date": cells[0],
+                                    "wallet": cells[1],
+                                    "mode": cells[2],
+                                    "amount": cells[3],
+                                    "description": cells[4],
+                                }
+                            )
+
+    return result
 
 
-def fetch_data_for_account(page, account: dict) -> dict:
-    """Navigates, logs in, and extracts dashboard metrics for a single account."""
-    username = str(account.get("username"))
-    password = str(account.get("password"))
+async def login_and_scrape(
+    page,
+    username: str,
+    password: str,
+) -> dict:
+    await page.goto(
+        LOGIN_URL,
+        wait_until="domcontentloaded",
+        timeout=60000,
+    )
 
-    # 1. Navigate to login
-    page.goto(LOGIN_URL)
+    await page.wait_for_timeout(2000)
 
-    # 2. Fill credentials safely
-    page.fill("input[name='username']", username)
-    page.fill("input[name='password']", password)
-    page.click("button[type='submit']")
+    username_locator = page.locator(
+        'input[name="username"], '
+        'input[name="user_name"], '
+        'input[name="email"], '
+        'input[type="email"], '
+        'input[type="text"]'
+    ).first
 
-    # 3. Wait for dashboard elements to load
-    page.wait_for_url(DASHBOARD_URL)
-    page.wait_for_selector(".user-name")
+    password_locator = page.locator(
+        'input[name="password"], '
+        'input[type="password"]'
+    ).first
 
-    # 4. Extract HTML content and parse
-    html_content = page.content()
-    return parse_dashboard_html(html_content)
+    submit_locator = page.locator(
+        'button[type="submit"], '
+        'input[type="submit"], '
+        'button:has-text("Login"), '
+        'button:has-text("Log In"), '
+        'button:has-text("Sign In")'
+    ).first
+
+    await username_locator.wait_for(
+        state="visible",
+        timeout=30000,
+    )
+
+    await username_locator.fill(username)
+
+    await password_locator.wait_for(
+        state="visible",
+        timeout=30000,
+    )
+
+    await password_locator.fill(password)
+    await submit_locator.click()
+
+    await page.wait_for_timeout(2000)
+
+    # Open the known dashboard URL after login.
+    await page.goto(
+        DASHBOARD_URL,
+        wait_until="domcontentloaded",
+        timeout=60000,
+    )
+
+    try:
+        await page.wait_for_load_state(
+            "networkidle",
+            timeout=60000,
+        )
+    except PlaywrightTimeoutError:
+        # Some websites keep background requests open.
+        pass
+
+    await page.wait_for_timeout(2500)
+
+    body_text = await page.locator("body").inner_text()
+
+    if "Welcome back" not in body_text:
+        await page.screenshot(
+            path=f"login-failed-{username}.png",
+            full_page=True,
+        )
+
+        raise RuntimeError(
+            f"Login failed or dashboard did not load for {username}"
+        )
+
+    html = await page.content()
+
+    metrics = parse_dashboard_html(html)
+
+    if metrics["e_wallet"] == "Not found":
+        raise RuntimeError(
+            f"Dashboard loaded but values could not be parsed for {username}"
+        )
+
+    return metrics
 
 
-def format_account_report(acc_name: str, data: dict) -> str:
-    """Formats dashboard data dictionary into Markdown for Telegram."""
-    lines = [f"👤 *Account:* `{acc_name}`"]
-    if "user_id" in data:
-        lines.append(f"  • *User ID:* `{data['user_id']}`")
-    if "rank" in data:
-        lines.append(f"  • *Rank:* {data['rank']}")
-    if "active_investment" in data:
-        lines.append(f"  • *Active Inv:* ${data['active_investment']:,.2f}")
-    if "e_wallet_balance" in data:
-        lines.append(f"  • *E-Wallet:* ${data['e_wallet_balance']:,.2f}")
-    if "a_wallet_balance" in data:
-        lines.append(f"  • *A-Wallet:* ${data['a_wallet_balance']:,.2f}")
+def format_telegram_message(metrics: dict) -> str:
+    lines = [
+        "📊 <b>Rich Maker Daily Summary</b>",
+        "",
+        f"👤 <b>Account:</b> "
+        f"<code>{escape(metrics['username'])}</code>",
+        f"🏅 <b>Rank:</b> "
+        f"{escape(metrics['rank'])}",
+        "",
+        f"💳 <b>E-wallet:</b> "
+        f"{escape(metrics['e_wallet'])}",
+        f"💰 <b>Active Investment:</b> "
+        f"{escape(metrics['active_investment'])}",
+        f"📈 <b>Revenue Reward:</b> "
+        f"{escape(metrics['revenue_reward'])}",
+        f"👥 <b>Direct Reward:</b> "
+        f"{escape(metrics['direct_reward'])}",
+        f"🎁 <b>Level Bonus:</b> "
+        f"{escape(metrics['level_bonus'])}",
+        f"🏆 <b>Rank Reward:</b> "
+        f"{escape(metrics['rank_reward'])}",
+        f"🎖 <b>Royalty Reward:</b> "
+        f"{escape(metrics['royalty_reward'])}",
+        "",
+        f"🧮 <b>Total Reward:</b> "
+        f"{escape(metrics['total_reward'])}",
+        f"🏦 <b>Total Withdraw:</b> "
+        f"{escape(metrics['total_withdraw'])}",
+        f"💵 <b>Remaining:</b> "
+        f"{escape(metrics['remaining'])}",
+        "",
+        "🧾 <b>Recent Transactions</b>",
+    ]
+
+    transactions = metrics.get("recent_transactions", [])
+
+    if not transactions:
+        lines.append("No recent transactions found.")
+    else:
+        for transaction in transactions:
+            lines.extend(
+                [
+                    "",
+                    f"<b>{escape(transaction['date'])}</b>",
+                    f"Wallet: {escape(transaction['wallet'])}",
+                    f"Mode: {escape(transaction['mode'])}",
+                    f"Amount: {escape(transaction['amount'])}",
+                    "Description: "
+                    f"{escape(transaction['description'])}",
+                ]
+            )
+
     return "\n".join(lines)
 
 
-def main():
-    if not ACCOUNTS:
-        print(
-            "Error: No valid account credentials found in environment variables."
+def send_telegram_message(message: str) -> None:
+    if not TELEGRAM_BOT_TOKEN:
+        raise RuntimeError(
+            "TELEGRAM_BOT_TOKEN is not configured."
         )
-        return
 
-    results = []
+    if not TELEGRAM_CHAT_ID:
+        raise RuntimeError(
+            "TELEGRAM_CHAT_ID is not configured."
+        )
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
+    telegram_url = (
+        f"https://api.telegram.org/bot"
+        f"{TELEGRAM_BOT_TOKEN}/sendMessage"
+    )
 
-        for acc in ACCOUNTS:
-            acc_label = acc.get("username", "Unknown Account")
+    response = requests.post(
+        telegram_url,
+        data={
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": message,
+            "parse_mode": "HTML",
+            "disable_web_page_preview": "true",
+        },
+        timeout=30,
+    )
 
-            context = browser.new_context()
-            page = context.new_page()
+    response.raise_for_status()
 
-            try:
-                data = fetch_data_for_account(page, acc)
-                formatted_summary = format_account_report(acc_label, data)
-                results.append(f"✅ {formatted_summary}")
-            except Exception as e:
-                results.append(f"❌ *{acc_label}*: Failed (`{str(e)}`)")
-            finally:
-                context.close()
 
-        browser.close()
+async def process_account(browser, account: dict) -> None:
+    username = account["username"]
+    password = account["password"]
 
-    report = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(results)
-    print(report)
-    send_telegram_notification(report)
+    context = await browser.new_context()
+    page = await context.new_page()
+
+    try:
+        print(f"Processing account: {username}")
+
+        metrics = await login_and_scrape(
+            page=page,
+            username=username,
+            password=password,
+        )
+
+        message = format_telegram_message(metrics)
+        send_telegram_message(message)
+
+        print(f"Successfully processed account: {username}")
+
+    except Exception as error:
+        print(
+            f"Failed to process {username}: "
+            f"{type(error).__name__}: {error}"
+        )
+
+        # Send a safe error notification without exposing the password.
+        try:
+            send_telegram_message(
+                "❌ <b>Rich Maker scraper failed</b>\n"
+                f"Account: <code>{escape(username)}</code>\n"
+                "Please check the GitHub Actions logs."
+            )
+        except Exception as telegram_error:
+            print(
+                "Could not send Telegram error message: "
+                f"{type(telegram_error).__name__}"
+            )
+
+    finally:
+        await context.close()
+
+
+async def main() -> None:
+    accounts = load_accounts()
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch(
+            headless=True,
+            args=["--no-sandbox"],
+        )
+
+        try:
+            for account in accounts:
+                await process_account(browser, account)
+        finally:
+            await browser.close()
 
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main())
