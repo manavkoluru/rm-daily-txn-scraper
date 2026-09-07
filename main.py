@@ -43,36 +43,51 @@ def extract_money(text: str) -> str:
 
 
 def load_accounts() -> List[Dict[str, str]]:
-    accounts = []
-    index = 1
+    """
+    Reads usernames from:
 
-    while True:
-        username = os.getenv(f"RM_USER_{index}")
-        password = os.getenv(f"RM_PASS_{index}")
+        RM_USERS=user1,user2,user3
 
-        if username is None and password is None:
-            break
+    and uses the same password from:
 
-        if not username or not password:
-            raise RuntimeError(
-                f"RM_USER_{index} and RM_PASS_{index} "
-                "must both be configured."
-            )
+        RM_PASSWORD=common-password
+    """
 
-        accounts.append(
-            {
-                "username": username.strip(),
-                "password": password,
-            }
-        )
+    usernames_value = os.getenv("RM_USERS", "").strip()
+    shared_password = os.getenv("RM_PASSWORD", "")
 
-        index += 1
-
-    if not accounts:
+    if not usernames_value:
         raise RuntimeError(
-            "No valid account credentials found. "
-            "Expected RM_USER_1 and RM_PASS_1."
+            "RM_USERS is missing or empty. "
+            "Add comma-separated usernames to GitHub Secrets."
         )
+
+    if not shared_password:
+        raise RuntimeError(
+            "RM_PASSWORD is missing or empty. "
+            "Add the shared password to GitHub Secrets."
+        )
+
+    usernames = [
+        username.strip()
+        for username in usernames_value.split(",")
+        if username.strip()
+    ]
+
+    if not usernames:
+        raise RuntimeError(
+            "No valid usernames were found in RM_USERS."
+        )
+
+    accounts = [
+        {
+            "username": username,
+            "password": shared_password,
+        }
+        for username in usernames
+    ]
+
+    print(f"Found {len(accounts)} account(s).")
 
     return accounts
 
@@ -96,9 +111,7 @@ def parse_dashboard_html(html: str) -> dict:
         "recent_transactions": [],
     }
 
-    # ---------------------------------------------------------
     # Username
-    # ---------------------------------------------------------
     for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
         text = clean_text(
             heading.get_text(" ", strip=True)
@@ -108,9 +121,7 @@ def parse_dashboard_html(html: str) -> dict:
             result["username"] = text.replace("!", "").strip()
             break
 
-    # ---------------------------------------------------------
     # Rank
-    # ---------------------------------------------------------
     rank_badge = soup.select_one(".rank-badge")
 
     if rank_badge:
@@ -118,20 +129,17 @@ def parse_dashboard_html(html: str) -> dict:
             rank_badge.get_text(" ", strip=True)
         )
 
-    # ---------------------------------------------------------
     # E-wallet
     #
-    # The dashboard HTML contains:
+    # Expected HTML:
     #
     # <h5>$ 187.10</h5>
     # <p>E-wallet</p>
     #
-    # Both elements are inside the same parent div.
+    # Both elements are inside the same parent.
     #
-    # Important:
-    # Do not use find_previous("h5") globally. That can find an
-    # unrelated heading such as "Michle Clark".
-    # ---------------------------------------------------------
+    # We intentionally do not use find_previous("h5") because
+    # that can find an unrelated heading elsewhere on the page.
     for paragraph in soup.find_all("p"):
         label = clean_text(
             paragraph.get_text(" ", strip=True)
@@ -151,7 +159,6 @@ def parse_dashboard_html(html: str) -> dict:
         if not parent:
             continue
 
-        # Search only within this E-wallet container.
         heading = parent.find("h5", recursive=False)
 
         if not heading:
@@ -160,20 +167,15 @@ def parse_dashboard_html(html: str) -> dict:
         if not heading:
             continue
 
-        value_text = clean_text(
+        value = extract_money(
             heading.get_text(" ", strip=True)
         )
 
-        value = extract_money(value_text)
-
-        # Confirm that the extracted value is actually money.
         if re.search(r"[$₹€£]\s*[\d,]+", value):
             result["e_wallet"] = value
             break
 
-    # ---------------------------------------------------------
     # Active Investment
-    # ---------------------------------------------------------
     for heading in soup.find_all(["h5", "h6"]):
         label = clean_text(
             heading.get_text(" ", strip=True)
@@ -204,9 +206,7 @@ def parse_dashboard_html(html: str) -> dict:
 
         break
 
-    # ---------------------------------------------------------
     # Financial cards
-    # ---------------------------------------------------------
     label_mapping = {
         "revenue reward": "revenue_reward",
         "direct reward": "direct_reward",
@@ -241,9 +241,7 @@ def parse_dashboard_html(html: str) -> dict:
                 value_heading.get_text(" ", strip=True)
             )
 
-    # ---------------------------------------------------------
-    # Recent Transactions
-    # ---------------------------------------------------------
+    # Recent Transaction table
     transaction_heading = None
 
     for heading in soup.find_all(["h4", "h5", "h6"]):
@@ -286,14 +284,11 @@ def parse_dashboard_html(html: str) -> dict:
                                 }
                             )
 
-    # ---------------------------------------------------------
-    # Fallback text parser
-    # ---------------------------------------------------------
+    # Fallback parser using visible page text
     page_text = clean_text(
         soup.get_text(" ", strip=True)
     )
 
-    # E-wallet fallback
     if result["e_wallet"] == "Not found":
         match = re.search(
             r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
@@ -307,7 +302,6 @@ def parse_dashboard_html(html: str) -> dict:
                 match.group(1)
             )
 
-    # Total Reward fallback
     if result["total_reward"] == "Not found":
         match = re.search(
             r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
@@ -321,7 +315,6 @@ def parse_dashboard_html(html: str) -> dict:
                 match.group(1)
             )
 
-    # Remaining fallback
     if result["remaining"] == "Not found":
         match = re.search(
             r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
@@ -343,7 +336,6 @@ async def login_and_scrape(
     username: str,
     password: str,
 ) -> dict:
-    # Open login page
     await page.goto(
         LOGIN_URL,
         wait_until="domcontentloaded",
@@ -384,7 +376,6 @@ async def login_and_scrape(
 
     await page.wait_for_timeout(2500)
 
-    # Open dashboard after login
     await page.goto(
         DASHBOARD_URL,
         wait_until="domcontentloaded",
@@ -397,7 +388,6 @@ async def login_and_scrape(
             timeout=60000,
         )
     except PlaywrightTimeoutError:
-        # Some pages continuously make background requests.
         pass
 
     await page.wait_for_timeout(2500)
@@ -422,7 +412,7 @@ async def login_and_scrape(
 
     html = await page.content()
 
-    # Save debug HTML and screenshot for GitHub Actions artifacts.
+    # Save debugging files for GitHub Actions artifacts.
     safe_username = re.sub(
         r"[^A-Za-z0-9_.-]",
         "_",
@@ -532,7 +522,7 @@ def format_telegram_message(metrics: dict) -> str:
                 ]
             )
 
-    # Telegram allows a maximum of 4096 characters.
+    # Telegram message limit.
     return "\n".join(lines)[:4000]
 
 
@@ -566,7 +556,10 @@ def send_telegram_message(message: str) -> None:
     response.raise_for_status()
 
 
-async def process_account(browser, account: dict) -> bool:
+async def process_account(
+    browser,
+    account: dict,
+) -> bool:
     username = account["username"]
     password = account["password"]
 
