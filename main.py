@@ -1,12 +1,8 @@
 import os
 import re
 from bs4 import BeautifulSoup
-from dotenv import load_dotenv
 from playwright.sync_api import sync_playwright
 import requests
-
-# Load local .env file if available
-load_dotenv()
 
 # Global Configuration
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
