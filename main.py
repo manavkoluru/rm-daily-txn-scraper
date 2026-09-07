@@ -28,7 +28,7 @@ def fetch_data_for_account(page, account: dict) -> str:
 
     # Fill login credentials.
     page.fill("input[name='user_id']", account["username"])
-    page.fill("input[name='Password']", account["password"])
+    page.fill("input[name='password']", account["password"])
     page.click("button[type='submit']")
 
     # Wait for target element to load and extract value.
