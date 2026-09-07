@@ -42,7 +42,7 @@ def extract_money(text: str) -> str:
     return match.group(0) if match else text
 
 
-def load_accounts():
+def load_accounts() -> List[Dict[str, str]]:
     accounts = []
     index = 1
 
@@ -96,7 +96,7 @@ def parse_dashboard_html(html: str) -> dict:
         "recent_transactions": [],
     }
 
-    # Extract username, for example: R625263 !
+    # Username
     for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
         text = clean_text(heading.get_text(" ", strip=True))
 
@@ -104,7 +104,7 @@ def parse_dashboard_html(html: str) -> dict:
             result["username"] = text.replace("!", "").strip()
             break
 
-    # Extract rank
+    # Rank
     rank_badge = soup.select_one(".rank-badge")
 
     if rank_badge:
@@ -112,26 +112,41 @@ def parse_dashboard_html(html: str) -> dict:
             rank_badge.get_text(" ", strip=True)
         )
 
-    # Extract E-wallet
+    # E-wallet
     for paragraph in soup.find_all("p"):
         label = clean_text(
             paragraph.get_text(" ", strip=True)
         ).lower()
 
-        if label == "e-wallet":
-            parent = paragraph.parent
+        normalized_label = (
+            label.replace("\xa0", "")
+            .replace(" ", "")
+            .replace("-", "")
+        )
 
-            if parent:
-                heading = parent.find("h5")
+        if normalized_label != "ewallet":
+            continue
 
-                if heading:
-                    result["e_wallet"] = extract_money(
-                        heading.get_text(" ", strip=True)
-                    )
+        parent = paragraph.parent
 
+        if parent:
+            heading = parent.find("h5")
+
+            if heading:
+                result["e_wallet"] = extract_money(
+                    heading.get_text(" ", strip=True)
+                )
+                break
+
+        previous_heading = paragraph.find_previous("h5")
+
+        if previous_heading:
+            result["e_wallet"] = extract_money(
+                previous_heading.get_text(" ", strip=True)
+            )
             break
 
-    # Extract Active Investment
+    # Active investment
     for heading in soup.find_all(["h5", "h6"]):
         label = clean_text(
             heading.get_text(" ", strip=True)
@@ -158,7 +173,7 @@ def parse_dashboard_html(html: str) -> dict:
 
             break
 
-    # Extract reward and balance cards
+    # Financial cards
     label_mapping = {
         "revenue reward": "revenue_reward",
         "direct reward": "direct_reward",
@@ -193,7 +208,7 @@ def parse_dashboard_html(html: str) -> dict:
                 value_heading.get_text(" ", strip=True)
             )
 
-    # Extract Recent Transaction table
+    # Recent transactions
     transaction_heading = None
 
     for heading in soup.find_all(["h4", "h5", "h6"]):
@@ -235,6 +250,41 @@ def parse_dashboard_html(html: str) -> dict:
                                     "description": cells[4],
                                 }
                             )
+
+    # Fallback parser using visible page text
+    page_text = clean_text(
+        soup.get_text(" ", strip=True)
+    )
+
+    fallback_patterns = {
+        "e_wallet": (
+            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
+            r"\s+E[-\s]?wallet"
+        ),
+        "total_reward": (
+            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
+            r"\s+Total\s*Reward"
+        ),
+        "remaining": (
+            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
+            r"\s+Remaining"
+        ),
+    }
+
+    for field_name, pattern in fallback_patterns.items():
+        if result[field_name] != "Not found":
+            continue
+
+        match = re.search(
+            pattern,
+            page_text,
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+            result[field_name] = extract_money(
+                match.group(1)
+            )
 
     return result
 
@@ -279,18 +329,11 @@ async def login_and_scrape(
     )
 
     await username_locator.fill(username)
-
-    await password_locator.wait_for(
-        state="visible",
-        timeout=30000,
-    )
-
     await password_locator.fill(password)
     await submit_locator.click()
 
-    await page.wait_for_timeout(2000)
+    await page.wait_for_timeout(2500)
 
-    # Open the known dashboard URL after login.
     await page.goto(
         DASHBOARD_URL,
         wait_until="domcontentloaded",
@@ -303,7 +346,6 @@ async def login_and_scrape(
             timeout=60000,
         )
     except PlaywrightTimeoutError:
-        # Some websites keep background requests open.
         pass
 
     await page.wait_for_timeout(2500)
@@ -311,8 +353,14 @@ async def login_and_scrape(
     body_text = await page.locator("body").inner_text()
 
     if "Welcome back" not in body_text:
+        safe_username = re.sub(
+            r"[^A-Za-z0-9_.-]",
+            "_",
+            username,
+        )
+
         await page.screenshot(
-            path=f"login-failed-{username}.png",
+            path=f"login-failed-{safe_username}.png",
             full_page=True,
         )
 
@@ -322,11 +370,55 @@ async def login_and_scrape(
 
     html = await page.content()
 
+    safe_username = re.sub(
+        r"[^A-Za-z0-9_.-]",
+        "_",
+        username,
+    )
+
+    with open(
+        f"dashboard-{safe_username}.html",
+        "w",
+        encoding="utf-8",
+    ) as debug_file:
+        debug_file.write(html)
+
+    await page.screenshot(
+        path=f"dashboard-{safe_username}.png",
+        full_page=True,
+    )
+
     metrics = parse_dashboard_html(html)
 
-    if metrics["e_wallet"] == "Not found":
+    print(
+        "Parsed values:",
+        {
+            "username": metrics["username"],
+            "rank": metrics["rank"],
+            "e_wallet": metrics["e_wallet"],
+            "active_investment": metrics["active_investment"],
+            "total_reward": metrics["total_reward"],
+            "remaining": metrics["remaining"],
+        },
+    )
+
+    important_fields = [
+        "e_wallet",
+        "active_investment",
+        "total_reward",
+        "remaining",
+    ]
+
+    missing_fields = [
+        field
+        for field in important_fields
+        if metrics.get(field) == "Not found"
+    ]
+
+    if len(missing_fields) == len(important_fields):
         raise RuntimeError(
-            f"Dashboard loaded but values could not be parsed for {username}"
+            "Dashboard HTML was loaded, but no financial values "
+            f"could be parsed. Missing: {missing_fields}"
         )
 
     return metrics
@@ -366,7 +458,10 @@ def format_telegram_message(metrics: dict) -> str:
         "🧾 <b>Recent Transactions</b>",
     ]
 
-    transactions = metrics.get("recent_transactions", [])
+    transactions = metrics.get(
+        "recent_transactions",
+        [],
+    )
 
     if not transactions:
         lines.append("No recent transactions found.")
@@ -384,7 +479,10 @@ def format_telegram_message(metrics: dict) -> str:
                 ]
             )
 
-    return "\n".join(lines)
+    message = "\n".join(lines)
+
+    # Telegram message limit is 4096 characters.
+    return message[:4000]
 
 
 def send_telegram_message(message: str) -> None:
@@ -417,7 +515,7 @@ def send_telegram_message(message: str) -> None:
     response.raise_for_status()
 
 
-async def process_account(browser, account: dict) -> None:
+async def process_account(browser, account: dict) -> bool:
     username = account["username"]
     password = account["password"]
 
@@ -428,15 +526,17 @@ async def process_account(browser, account: dict) -> None:
         print(f"Processing account: {username}")
 
         metrics = await login_and_scrape(
-            page=page,
-            username=username,
-            password=password,
+            page,
+            username,
+            password,
         )
 
-        message = format_telegram_message(metrics)
-        send_telegram_message(message)
+        send_telegram_message(
+            format_telegram_message(metrics)
+        )
 
         print(f"Successfully processed account: {username}")
+        return True
 
     except Exception as error:
         print(
@@ -444,18 +544,19 @@ async def process_account(browser, account: dict) -> None:
             f"{type(error).__name__}: {error}"
         )
 
-        # Send a safe error notification without exposing the password.
         try:
             send_telegram_message(
                 "❌ <b>Rich Maker scraper failed</b>\n"
                 f"Account: <code>{escape(username)}</code>\n"
-                "Please check the GitHub Actions logs."
+                "Check the GitHub Actions artifacts and logs."
             )
         except Exception as telegram_error:
             print(
-                "Could not send Telegram error message: "
+                "Telegram error notification failed: "
                 f"{type(telegram_error).__name__}"
             )
+
+        return False
 
     finally:
         await context.close()
@@ -463,6 +564,7 @@ async def process_account(browser, account: dict) -> None:
 
 async def main() -> None:
     accounts = load_accounts()
+    successful_accounts = 0
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch(
@@ -472,9 +574,21 @@ async def main() -> None:
 
         try:
             for account in accounts:
-                await process_account(browser, account)
+                success = await process_account(
+                    browser,
+                    account,
+                )
+
+                if success:
+                    successful_accounts += 1
+
         finally:
             await browser.close()
+
+    if successful_accounts == 0:
+        raise RuntimeError(
+            "All accounts failed. Check the logs and uploaded artifacts."
+        )
 
 
 if __name__ == "__main__":
