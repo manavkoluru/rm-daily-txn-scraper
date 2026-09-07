@@ -96,15 +96,21 @@ def parse_dashboard_html(html: str) -> dict:
         "recent_transactions": [],
     }
 
+    # ---------------------------------------------------------
     # Username
+    # ---------------------------------------------------------
     for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
-        text = clean_text(heading.get_text(" ", strip=True))
+        text = clean_text(
+            heading.get_text(" ", strip=True)
+        )
 
         if text.endswith("!") and len(text) < 100:
             result["username"] = text.replace("!", "").strip()
             break
 
+    # ---------------------------------------------------------
     # Rank
+    # ---------------------------------------------------------
     rank_badge = soup.select_one(".rank-badge")
 
     if rank_badge:
@@ -112,7 +118,20 @@ def parse_dashboard_html(html: str) -> dict:
             rank_badge.get_text(" ", strip=True)
         )
 
+    # ---------------------------------------------------------
     # E-wallet
+    #
+    # The dashboard HTML contains:
+    #
+    # <h5>$ 187.10</h5>
+    # <p>E-wallet</p>
+    #
+    # Both elements are inside the same parent div.
+    #
+    # Important:
+    # Do not use find_previous("h5") globally. That can find an
+    # unrelated heading such as "Michle Clark".
+    # ---------------------------------------------------------
     for paragraph in soup.find_all("p"):
         label = clean_text(
             paragraph.get_text(" ", strip=True)
@@ -129,51 +148,65 @@ def parse_dashboard_html(html: str) -> dict:
 
         parent = paragraph.parent
 
-        if parent:
+        if not parent:
+            continue
+
+        # Search only within this E-wallet container.
+        heading = parent.find("h5", recursive=False)
+
+        if not heading:
             heading = parent.find("h5")
 
-            if heading:
-                result["e_wallet"] = extract_money(
-                    heading.get_text(" ", strip=True)
-                )
-                break
+        if not heading:
+            continue
 
-        previous_heading = paragraph.find_previous("h5")
+        value_text = clean_text(
+            heading.get_text(" ", strip=True)
+        )
 
-        if previous_heading:
-            result["e_wallet"] = extract_money(
-                previous_heading.get_text(" ", strip=True)
-            )
+        value = extract_money(value_text)
+
+        # Confirm that the extracted value is actually money.
+        if re.search(r"[$₹€£]\s*[\d,]+", value):
+            result["e_wallet"] = value
             break
 
-    # Active investment
+    # ---------------------------------------------------------
+    # Active Investment
+    # ---------------------------------------------------------
     for heading in soup.find_all(["h5", "h6"]):
         label = clean_text(
             heading.get_text(" ", strip=True)
         ).lower()
 
-        if label == "active investment":
-            container = heading.parent
+        if label != "active investment":
+            continue
 
-            if container:
-                text = clean_text(
-                    container.get_text(" ", strip=True)
-                )
+        container = heading.parent
 
-                match = re.search(
-                    r"invested\s+([$₹€£]?\s*[\d,]+(?:\.\d{2})?)",
-                    text,
-                    re.IGNORECASE,
-                )
+        if not container:
+            continue
 
-                if match:
-                    result["active_investment"] = extract_money(
-                        match.group(1)
-                    )
+        text = clean_text(
+            container.get_text(" ", strip=True)
+        )
 
-            break
+        match = re.search(
+            r"invested\s+([$₹€£]?\s*[\d,]+(?:\.\d{2})?)",
+            text,
+            flags=re.IGNORECASE,
+        )
 
+        if match:
+            result["active_investment"] = extract_money(
+                match.group(1)
+            )
+
+        break
+
+    # ---------------------------------------------------------
     # Financial cards
+    # ---------------------------------------------------------
     label_mapping = {
         "revenue reward": "revenue_reward",
         "direct reward": "direct_reward",
@@ -208,7 +241,9 @@ def parse_dashboard_html(html: str) -> dict:
                 value_heading.get_text(" ", strip=True)
             )
 
-    # Recent transactions
+    # ---------------------------------------------------------
+    # Recent Transactions
+    # ---------------------------------------------------------
     transaction_heading = None
 
     for heading in soup.find_all(["h4", "h5", "h6"]):
@@ -251,38 +286,52 @@ def parse_dashboard_html(html: str) -> dict:
                                 }
                             )
 
-    # Fallback parser using visible page text
+    # ---------------------------------------------------------
+    # Fallback text parser
+    # ---------------------------------------------------------
     page_text = clean_text(
         soup.get_text(" ", strip=True)
     )
 
-    fallback_patterns = {
-        "e_wallet": (
-            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
-            r"\s+E[-\s]?wallet"
-        ),
-        "total_reward": (
-            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
-            r"\s+Total\s*Reward"
-        ),
-        "remaining": (
-            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
-            r"\s+Remaining"
-        ),
-    }
-
-    for field_name, pattern in fallback_patterns.items():
-        if result[field_name] != "Not found":
-            continue
-
+    # E-wallet fallback
+    if result["e_wallet"] == "Not found":
         match = re.search(
-            pattern,
+            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
+            r"\s+E[-\s]?wallet",
             page_text,
             flags=re.IGNORECASE,
         )
 
         if match:
-            result[field_name] = extract_money(
+            result["e_wallet"] = extract_money(
+                match.group(1)
+            )
+
+    # Total Reward fallback
+    if result["total_reward"] == "Not found":
+        match = re.search(
+            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
+            r"\s+Total\s*Reward",
+            page_text,
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+            result["total_reward"] = extract_money(
+                match.group(1)
+            )
+
+    # Remaining fallback
+    if result["remaining"] == "Not found":
+        match = re.search(
+            r"([$₹€£]\s*[\d,]+(?:\.\d{2})?)"
+            r"\s+Remaining",
+            page_text,
+            flags=re.IGNORECASE,
+        )
+
+        if match:
+            result["remaining"] = extract_money(
                 match.group(1)
             )
 
@@ -294,6 +343,7 @@ async def login_and_scrape(
     username: str,
     password: str,
 ) -> dict:
+    # Open login page
     await page.goto(
         LOGIN_URL,
         wait_until="domcontentloaded",
@@ -334,6 +384,7 @@ async def login_and_scrape(
 
     await page.wait_for_timeout(2500)
 
+    # Open dashboard after login
     await page.goto(
         DASHBOARD_URL,
         wait_until="domcontentloaded",
@@ -346,6 +397,7 @@ async def login_and_scrape(
             timeout=60000,
         )
     except PlaywrightTimeoutError:
+        # Some pages continuously make background requests.
         pass
 
     await page.wait_for_timeout(2500)
@@ -370,6 +422,7 @@ async def login_and_scrape(
 
     html = await page.content()
 
+    # Save debug HTML and screenshot for GitHub Actions artifacts.
     safe_username = re.sub(
         r"[^A-Za-z0-9_.-]",
         "_",
@@ -479,10 +532,8 @@ def format_telegram_message(metrics: dict) -> str:
                 ]
             )
 
-    message = "\n".join(lines)
-
-    # Telegram message limit is 4096 characters.
-    return message[:4000]
+    # Telegram allows a maximum of 4096 characters.
+    return "\n".join(lines)[:4000]
 
 
 def send_telegram_message(message: str) -> None:
@@ -531,9 +582,8 @@ async def process_account(browser, account: dict) -> bool:
             password,
         )
 
-        send_telegram_message(
-            format_telegram_message(metrics)
-        )
+        message = format_telegram_message(metrics)
+        send_telegram_message(message)
 
         print(f"Successfully processed account: {username}")
         return True
@@ -548,7 +598,7 @@ async def process_account(browser, account: dict) -> bool:
             send_telegram_message(
                 "❌ <b>Rich Maker scraper failed</b>\n"
                 f"Account: <code>{escape(username)}</code>\n"
-                "Check the GitHub Actions artifacts and logs."
+                "Check the GitHub Actions logs and artifacts."
             )
         except Exception as telegram_error:
             print(
@@ -587,7 +637,7 @@ async def main() -> None:
 
     if successful_accounts == 0:
         raise RuntimeError(
-            "All accounts failed. Check the logs and uploaded artifacts."
+            "All accounts failed. Check the GitHub Actions logs."
         )
 
 
