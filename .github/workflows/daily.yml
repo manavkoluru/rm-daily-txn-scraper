@@ -4,8 +4,8 @@ on:
   workflow_dispatch:
 
   schedule:
-    # Every day at 03:00 UTC
-    - cron: "0 3 * * *"
+    # Runs daily at 03:00 UTC
+    - cron: "0 9 * * *"
 
 jobs:
   scrape:
@@ -28,23 +28,22 @@ jobs:
 
       - name: Verify required secrets
         env:
-          RM_USER_1: ${{ secrets.RM_USER_1 }}
-          RM_PASS_1: ${{ secrets.RM_PASS_1 }}
+          RM_USERS: ${{ secrets.RM_USERS }}
+          RM_PASSWORD: ${{ secrets.RM_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LOGIN_URL: ${{ secrets.LOGIN_URL }}
         run: |
-          test -n "$RM_USER_1" && echo "RM_USER_1 is configured" || exit 1
-          test -n "$RM_PASS_1" && echo "RM_PASS_1 is configured" || exit 1
+          test -n "$RM_USERS" && echo "RM_USERS is configured" || exit 1
+          test -n "$RM_PASSWORD" && echo "RM_PASSWORD is configured" || exit 1
           test -n "$TELEGRAM_BOT_TOKEN" && echo "TELEGRAM_BOT_TOKEN is configured" || exit 1
           test -n "$TELEGRAM_CHAT_ID" && echo "TELEGRAM_CHAT_ID is configured" || exit 1
           test -n "$LOGIN_URL" && echo "LOGIN_URL is configured" || exit 1
 
       - name: Run scraper
         env:
-          RM_USER_1: ${{ secrets.RM_USER_1 }}
-          RM_PASS_1: ${{ secrets.RM_PASS_1 }}
-
+          RM_USERS: ${{ secrets.RM_USERS }}
+          RM_PASSWORD: ${{ secrets.RM_PASSWORD }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           LOGIN_URL: ${{ secrets.LOGIN_URL }}
