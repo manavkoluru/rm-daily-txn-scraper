@@ -23,9 +23,20 @@ DASHBOARD_URL = (
     "6e62756c736463253344"
 )
 
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "").strip()
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "").strip()
+TELEGRAM_BOT_TOKEN = os.getenv(
+    "TELEGRAM_BOT_TOKEN",
+    "",
+).strip()
 
+TELEGRAM_CHAT_ID = os.getenv(
+    "TELEGRAM_CHAT_ID",
+    "",
+).strip()
+
+
+# ============================================================
+# Helpers
+# ============================================================
 
 def clean_text(text: str) -> str:
     return re.sub(r"\s+", " ", text or "").strip()
@@ -42,30 +53,37 @@ def extract_money(text: str) -> str:
     return match.group(0) if match else text
 
 
+def safe_filename(value: str) -> str:
+    return re.sub(
+        r"[^A-Za-z0-9_.-]",
+        "_",
+        value,
+    )
+
+
+# ============================================================
+# Accounts
+# ============================================================
+
 def load_accounts() -> List[Dict[str, str]]:
-    """
-    Reads usernames from:
+    usernames_value = os.getenv(
+        "RM_USERS",
+        "",
+    ).strip()
 
-        RM_USERS=user1,user2,user3
-
-    and uses the same password from:
-
-        RM_PASSWORD=common-password
-    """
-
-    usernames_value = os.getenv("RM_USERS", "").strip()
-    shared_password = os.getenv("RM_PASSWORD", "")
+    shared_password = os.getenv(
+        "RM_PASSWORD",
+        "",
+    )
 
     if not usernames_value:
         raise RuntimeError(
-            "RM_USERS is missing or empty. "
-            "Add comma-separated usernames to GitHub Secrets."
+            "RM_USERS is missing or empty."
         )
 
     if not shared_password:
         raise RuntimeError(
-            "RM_PASSWORD is missing or empty. "
-            "Add the shared password to GitHub Secrets."
+            "RM_PASSWORD is missing or empty."
         )
 
     usernames = [
@@ -76,7 +94,7 @@ def load_accounts() -> List[Dict[str, str]]:
 
     if not usernames:
         raise RuntimeError(
-            "No valid usernames were found in RM_USERS."
+            "No valid usernames found in RM_USERS."
         )
 
     accounts = [
@@ -92,54 +110,210 @@ def load_accounts() -> List[Dict[str, str]]:
     return accounts
 
 
+# ============================================================
+# Fetch "Your Name" From Profile Settings
+# ============================================================
+
+async def fetch_profile_name(page) -> str:
+    """
+    Fetches the name from:
+
+        My Account
+        -> Profile Settings
+        -> Your Name
+    """
+
+    try:
+        # Click My Account if available
+        my_account = page.get_by_text(
+            "My Account",
+            exact=True,
+        ).first
+
+        if await my_account.count() > 0:
+            try:
+                await my_account.click()
+                await page.wait_for_timeout(700)
+            except Exception:
+                pass
+
+        # Click Profile Settings
+        profile_settings = page.get_by_text(
+            "Profile Settings",
+            exact=True,
+        ).first
+
+        if await profile_settings.count() == 0:
+            profile_settings = page.locator(
+                "a",
+                has_text="Profile Settings",
+            ).first
+
+        if await profile_settings.count() == 0:
+            raise RuntimeError(
+                "Profile Settings link was not found."
+            )
+
+        await profile_settings.click()
+        await page.wait_for_timeout(1500)
+
+        # Wait for profile page content
+        try:
+            await page.get_by_text(
+                "Your Personal Information",
+                exact=False,
+            ).wait_for(
+                state="visible",
+                timeout=15000,
+            )
+        except PlaywrightTimeoutError:
+            pass
+
+        # ----------------------------------------------------
+        # Find label exactly matching "Your Name"
+        # ----------------------------------------------------
+
+        labels = page.locator("label")
+
+        for index in range(await labels.count()):
+            label = labels.nth(index)
+
+            label_text = clean_text(
+                await label.inner_text()
+            ).lower()
+
+            if label_text != "your name":
+                continue
+
+            # The input is normally in the same parent
+            parent = label.locator("..")
+            name_input = parent.locator("input").first
+
+            # Try another parent level if necessary
+            if await name_input.count() == 0:
+                parent = parent.locator("..")
+                name_input = parent.locator("input").first
+
+            if await name_input.count() > 0:
+                name_value = await name_input.input_value()
+
+                if name_value.strip():
+                    name_value = clean_text(name_value)
+
+                    print(
+                        "Your Name found in Profile Settings: "
+                        f"{name_value}"
+                    )
+
+                    return name_value
+
+        # ----------------------------------------------------
+        # Try common input name and ID values
+        # ----------------------------------------------------
+
+        name_input = page.locator(
+            'input[name="name"], '
+            'input[name="full_name"], '
+            'input[name="fullname"], '
+            'input[name="your_name"], '
+            'input[id="name"], '
+            'input[id="full_name"], '
+            'input[id="fullname"], '
+            'input[id="your_name"]'
+        ).first
+
+        if await name_input.count() > 0:
+            name_value = await name_input.input_value()
+
+            if name_value.strip():
+                name_value = clean_text(name_value)
+
+                print(
+                    "Your Name found using input selector: "
+                    f"{name_value}"
+                )
+
+                return name_value
+
+        # ----------------------------------------------------
+        # Search around visible "Your Name" text
+        # ----------------------------------------------------
+
+        your_name_text = page.get_by_text(
+            "Your Name",
+            exact=True,
+        ).first
+
+        if await your_name_text.count() > 0:
+            parent = your_name_text.locator("..")
+
+            for _ in range(3):
+                name_input = parent.locator("input").first
+
+                if await name_input.count() > 0:
+                    name_value = await name_input.input_value()
+
+                    if name_value.strip():
+                        name_value = clean_text(name_value)
+
+                        print(
+                            "Your Name found in profile container: "
+                            f"{name_value}"
+                        )
+
+                        return name_value
+
+                parent = parent.locator("..")
+
+        # Save debug files if the field could not be found
+        await page.screenshot(
+            path="profile-settings-debug.png",
+            full_page=True,
+        )
+
+        with open(
+            "profile-settings-debug.html",
+            "w",
+            encoding="utf-8",
+        ) as debug_file:
+            debug_file.write(await page.content())
+
+        print(
+            "Your Name field was found, but its value "
+            "could not be read."
+        )
+
+    except Exception as error:
+        print(
+            "Could not fetch Your Name: "
+            f"{type(error).__name__}: {error}"
+        )
+
+    return "Not found"
+
+
+# ============================================================
+# Dashboard Parser
+# ============================================================
+
 def parse_dashboard_html(html: str) -> dict:
-    soup = BeautifulSoup(html, "html.parser")
+    soup = BeautifulSoup(
+        html,
+        "html.parser",
+    )
 
     result = {
-        "username": "Not found",
-        "rank": "Not found",
-        "e_wallet": "Not found",
         "active_investment": "Not found",
-        "revenue_reward": "Not found",
-        "direct_reward": "Not found",
-        "level_bonus": "Not found",
-        "rank_reward": "Not found",
-        "royalty_reward": "Not found",
+        "e_wallet": "Not found",
         "total_reward": "Not found",
-        "total_withdraw": "Not found",
         "remaining": "Not found",
         "recent_transactions": [],
     }
 
-    # Username
-    for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5"]):
-        text = clean_text(
-            heading.get_text(" ", strip=True)
-        )
-
-        if text.endswith("!") and len(text) < 100:
-            result["username"] = text.replace("!", "").strip()
-            break
-
-    # Rank
-    rank_badge = soup.select_one(".rank-badge")
-
-    if rank_badge:
-        result["rank"] = clean_text(
-            rank_badge.get_text(" ", strip=True)
-        )
-
+    # --------------------------------------------------------
     # E-wallet
-    #
-    # Expected HTML:
-    #
-    # <h5>$ 187.10</h5>
-    # <p>E-wallet</p>
-    #
-    # Both elements are inside the same parent.
-    #
-    # We intentionally do not use find_previous("h5") because
-    # that can find an unrelated heading elsewhere on the page.
+    # --------------------------------------------------------
+
     for paragraph in soup.find_all("p"):
         label = clean_text(
             paragraph.get_text(" ", strip=True)
@@ -159,23 +333,28 @@ def parse_dashboard_html(html: str) -> dict:
         if not parent:
             continue
 
-        heading = parent.find("h5", recursive=False)
-
-        if not heading:
-            heading = parent.find("h5")
-
-        if not heading:
-            continue
-
-        value = extract_money(
-            heading.get_text(" ", strip=True)
+        value_heading = parent.find(
+            "h5",
+            recursive=False,
         )
 
-        if re.search(r"[$₹€£]\s*[\d,]+", value):
-            result["e_wallet"] = value
+        if not value_heading:
+            value_heading = parent.find("h5")
+
+        if value_heading:
+            result["e_wallet"] = extract_money(
+                value_heading.get_text(
+                    " ",
+                    strip=True,
+                )
+            )
+
             break
 
+    # --------------------------------------------------------
     # Active Investment
+    # --------------------------------------------------------
+
     for heading in soup.find_all(["h5", "h6"]):
         label = clean_text(
             heading.get_text(" ", strip=True)
@@ -189,13 +368,14 @@ def parse_dashboard_html(html: str) -> dict:
         if not container:
             continue
 
-        text = clean_text(
+        container_text = clean_text(
             container.get_text(" ", strip=True)
         )
 
         match = re.search(
-            r"invested\s+([$₹€£]?\s*[\d,]+(?:\.\d{2})?)",
-            text,
+            r"invested\s+"
+            r"([$₹€£]?\s*[\d,]+(?:\.\d{2})?)",
+            container_text,
             flags=re.IGNORECASE,
         )
 
@@ -206,15 +386,12 @@ def parse_dashboard_html(html: str) -> dict:
 
         break
 
-    # Financial cards
-    label_mapping = {
-        "revenue reward": "revenue_reward",
-        "direct reward": "direct_reward",
-        "level bonus": "level_bonus",
-        "rank reward": "rank_reward",
-        "royalty reward": "royalty_reward",
+    # --------------------------------------------------------
+    # Total Reward and Remaining
+    # --------------------------------------------------------
+
+    financial_labels = {
         "total reward": "total_reward",
-        "total withdraw": "total_withdraw",
         "remaining": "remaining",
     }
 
@@ -225,11 +402,14 @@ def parse_dashboard_html(html: str) -> dict:
 
         label = label.replace("\xa0", " ")
 
-        if label not in label_mapping:
+        field_name = financial_labels.get(label)
+
+        if not field_name:
             continue
 
-        field_name = label_mapping[label]
-        card_body = paragraph.find_parent(class_="card-body")
+        card_body = paragraph.find_parent(
+            class_="card-body"
+        )
 
         if not card_body:
             continue
@@ -238,13 +418,21 @@ def parse_dashboard_html(html: str) -> dict:
 
         if value_heading:
             result[field_name] = extract_money(
-                value_heading.get_text(" ", strip=True)
+                value_heading.get_text(
+                    " ",
+                    strip=True,
+                )
             )
 
-    # Recent Transaction table
+    # --------------------------------------------------------
+    # Latest Transaction Only
+    # --------------------------------------------------------
+
     transaction_heading = None
 
-    for heading in soup.find_all(["h4", "h5", "h6"]):
+    for heading in soup.find_all(
+        ["h4", "h5", "h6"]
+    ):
         heading_text = clean_text(
             heading.get_text(" ", strip=True)
         ).lower()
@@ -265,26 +453,37 @@ def parse_dashboard_html(html: str) -> dict:
                 tbody = table.find("tbody")
 
                 if tbody:
-                    for row in tbody.find_all("tr"):
+                    # The first row is the latest transaction
+                    first_row = tbody.find("tr")
+
+                    if first_row:
                         cells = [
                             clean_text(
-                                cell.get_text(" ", strip=True)
+                                cell.get_text(
+                                    " ",
+                                    strip=True,
+                                )
                             )
-                            for cell in row.find_all("td")
+                            for cell in first_row.find_all("td")
                         ]
 
+                        # Table columns:
+                        # Date | Wallet | Txn Mode |
+                        # Amount | Description
                         if len(cells) >= 5:
-                            result["recent_transactions"].append(
+                            result[
+                                "recent_transactions"
+                            ].append(
                                 {
                                     "date": cells[0],
-                                    "wallet": cells[1],
-                                    "mode": cells[2],
                                     "amount": cells[3],
-                                    "description": cells[4],
                                 }
                             )
 
-    # Fallback parser using visible page text
+    # --------------------------------------------------------
+    # Fallback Parser
+    # --------------------------------------------------------
+
     page_text = clean_text(
         soup.get_text(" ", strip=True)
     )
@@ -331,6 +530,10 @@ def parse_dashboard_html(html: str) -> dict:
     return result
 
 
+# ============================================================
+# Login and Scrape
+# ============================================================
+
 async def login_and_scrape(
     page,
     username: str,
@@ -344,7 +547,7 @@ async def login_and_scrape(
 
     await page.wait_for_timeout(2000)
 
-    username_locator = page.locator(
+    username_input = page.locator(
         'input[name="username"], '
         'input[name="user_name"], '
         'input[name="email"], '
@@ -352,12 +555,12 @@ async def login_and_scrape(
         'input[type="text"]'
     ).first
 
-    password_locator = page.locator(
+    password_input = page.locator(
         'input[name="password"], '
         'input[type="password"]'
     ).first
 
-    submit_locator = page.locator(
+    submit_button = page.locator(
         'button[type="submit"], '
         'input[type="submit"], '
         'button:has-text("Login"), '
@@ -365,14 +568,14 @@ async def login_and_scrape(
         'button:has-text("Sign In")'
     ).first
 
-    await username_locator.wait_for(
+    await username_input.wait_for(
         state="visible",
         timeout=30000,
     )
 
-    await username_locator.fill(username)
-    await password_locator.fill(password)
-    await submit_locator.click()
+    await username_input.fill(username)
+    await password_input.fill(password)
+    await submit_button.click()
 
     await page.wait_for_timeout(2500)
 
@@ -395,29 +598,42 @@ async def login_and_scrape(
     body_text = await page.locator("body").inner_text()
 
     if "Welcome back" not in body_text:
-        safe_username = re.sub(
-            r"[^A-Za-z0-9_.-]",
-            "_",
-            username,
-        )
-
         await page.screenshot(
-            path=f"login-failed-{safe_username}.png",
+            path=(
+                "login-failed-"
+                f"{safe_filename(username)}.png"
+            ),
             full_page=True,
         )
 
         raise RuntimeError(
-            f"Login failed or dashboard did not load for {username}"
+            f"Login failed or dashboard did not load "
+            f"for {username}"
         )
+
+    # Fetch the actual "Your Name" from Profile Settings
+    profile_name = await fetch_profile_name(page)
+
+    # Return to the dashboard
+    await page.goto(
+        DASHBOARD_URL,
+        wait_until="domcontentloaded",
+        timeout=60000,
+    )
+
+    try:
+        await page.wait_for_load_state(
+            "networkidle",
+            timeout=60000,
+        )
+    except PlaywrightTimeoutError:
+        pass
+
+    await page.wait_for_timeout(2000)
 
     html = await page.content()
 
-    # Save debugging files for GitHub Actions artifacts.
-    safe_username = re.sub(
-        r"[^A-Za-z0-9_.-]",
-        "_",
-        username,
-    )
+    safe_username = safe_filename(username)
 
     with open(
         f"dashboard-{safe_username}.html",
@@ -433,72 +649,74 @@ async def login_and_scrape(
 
     metrics = parse_dashboard_html(html)
 
+    # Always use Your Name from Profile Settings
+    metrics["username"] = profile_name
+
     print(
         "Parsed values:",
         {
-            "username": metrics["username"],
-            "rank": metrics["rank"],
+            "name": metrics["username"],
+            "active_investment": (
+                metrics["active_investment"]
+            ),
             "e_wallet": metrics["e_wallet"],
-            "active_investment": metrics["active_investment"],
             "total_reward": metrics["total_reward"],
             "remaining": metrics["remaining"],
+            "latest_transaction": (
+                metrics["recent_transactions"]
+            ),
         },
     )
-
-    important_fields = [
-        "e_wallet",
-        "active_investment",
-        "total_reward",
-        "remaining",
-    ]
-
-    missing_fields = [
-        field
-        for field in important_fields
-        if metrics.get(field) == "Not found"
-    ]
-
-    if len(missing_fields) == len(important_fields):
-        raise RuntimeError(
-            "Dashboard HTML was loaded, but no financial values "
-            f"could be parsed. Missing: {missing_fields}"
-        )
 
     return metrics
 
 
+# ============================================================
+# Telegram Message
+# ============================================================
+
 def format_telegram_message(metrics: dict) -> str:
     lines = [
-        "📊 <b>Rich Maker Daily Summary</b>",
+        "📊 <b>Rich Maker Summary</b>",
         "",
-        f"👤 <b>Account:</b> "
-        f"<code>{escape(metrics['username'])}</code>",
-        f"🏅 <b>Rank:</b> "
-        f"{escape(metrics['rank'])}",
+        "👤 <b>Account</b>",
+        f"Name: <code>"
+        f"{escape(metrics.get('username', 'Not found'))}"
+        f"</code>",
         "",
-        f"💳 <b>E-wallet:</b> "
-        f"{escape(metrics['e_wallet'])}",
-        f"💰 <b>Active Investment:</b> "
-        f"{escape(metrics['active_investment'])}",
-        f"📈 <b>Revenue Reward:</b> "
-        f"{escape(metrics['revenue_reward'])}",
-        f"👥 <b>Direct Reward:</b> "
-        f"{escape(metrics['direct_reward'])}",
-        f"🎁 <b>Level Bonus:</b> "
-        f"{escape(metrics['level_bonus'])}",
-        f"🏆 <b>Rank Reward:</b> "
-        f"{escape(metrics['rank_reward'])}",
-        f"🎖 <b>Royalty Reward:</b> "
-        f"{escape(metrics['royalty_reward'])}",
+        "💼 <b>Active Investment</b>",
+        escape(
+            metrics.get(
+                "active_investment",
+                "Not found",
+            )
+        ),
         "",
-        f"🧮 <b>Total Reward:</b> "
-        f"{escape(metrics['total_reward'])}",
-        f"🏦 <b>Total Withdraw:</b> "
-        f"{escape(metrics['total_withdraw'])}",
-        f"💵 <b>Remaining:</b> "
-        f"{escape(metrics['remaining'])}",
+        "💳 <b>E-wallet</b>",
+        escape(
+            metrics.get(
+                "e_wallet",
+                "Not found",
+            )
+        ),
         "",
-        "🧾 <b>Recent Transactions</b>",
+        "🎁 <b>Total Reward</b>",
+        escape(
+            metrics.get(
+                "total_reward",
+                "Not found",
+            )
+        ),
+        "",
+        "💵 <b>Remaining</b>",
+        escape(
+            metrics.get(
+                "remaining",
+                "Not found",
+            )
+        ),
+        "",
+        "🧾 <b>Recent Transaction</b>",
     ]
 
     transactions = metrics.get(
@@ -509,22 +727,24 @@ def format_telegram_message(metrics: dict) -> str:
     if not transactions:
         lines.append("No recent transactions found.")
     else:
-        for transaction in transactions:
-            lines.extend(
-                [
-                    "",
-                    f"<b>{escape(transaction['date'])}</b>",
-                    f"Wallet: {escape(transaction['wallet'])}",
-                    f"Mode: {escape(transaction['mode'])}",
-                    f"Amount: {escape(transaction['amount'])}",
-                    "Description: "
-                    f"{escape(transaction['description'])}",
-                ]
-            )
+        latest_transaction = transactions[0]
 
-    # Telegram message limit.
+        lines.extend(
+            [
+                "",
+                f"📅 <b>Date:</b> "
+                f"{escape(latest_transaction.get('date', 'Not found'))}",
+                f"💰 <b>Amount:</b> "
+                f"{escape(latest_transaction.get('amount', 'Not found'))}",
+            ]
+        )
+
     return "\n".join(lines)[:4000]
 
+
+# ============================================================
+# Telegram
+# ============================================================
 
 def send_telegram_message(message: str) -> None:
     if not TELEGRAM_BOT_TOKEN:
@@ -556,6 +776,10 @@ def send_telegram_message(message: str) -> None:
     response.raise_for_status()
 
 
+# ============================================================
+# Process Account
+# ============================================================
+
 async def process_account(
     browser,
     account: dict,
@@ -576,9 +800,13 @@ async def process_account(
         )
 
         message = format_telegram_message(metrics)
+
         send_telegram_message(message)
 
-        print(f"Successfully processed account: {username}")
+        print(
+            f"Successfully processed account: {username}"
+        )
+
         return True
 
     except Exception as error:
@@ -596,7 +824,8 @@ async def process_account(
         except Exception as telegram_error:
             print(
                 "Telegram error notification failed: "
-                f"{type(telegram_error).__name__}"
+                f"{type(telegram_error).__name__}: "
+                f"{telegram_error}"
             )
 
         return False
@@ -604,6 +833,10 @@ async def process_account(
     finally:
         await context.close()
 
+
+# ============================================================
+# Main
+# ============================================================
 
 async def main() -> None:
     accounts = load_accounts()
@@ -630,7 +863,8 @@ async def main() -> None:
 
     if successful_accounts == 0:
         raise RuntimeError(
-            "All accounts failed. Check the GitHub Actions logs."
+            "All accounts failed. "
+            "Check the GitHub Actions logs."
         )
 
 
