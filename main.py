@@ -24,11 +24,11 @@ def send_telegram_notification(message: str) -> None:
 
 def fetch_data_for_account(page, account: dict) -> str:
     # Navigate to target login page.
-    page.goto("https://example.com/login")
+    page.goto("https://app.richmakers.space")
 
     # Fill login credentials.
-    page.fill("input[name='username']", account["username"])
-    page.fill("input[name='password']", account["password"])
+    page.fill("input[name='user_id']", account["username"])
+    page.fill("input[name='Password']", account["password"])
     page.click("button[type='submit']")
 
     # Wait for target element to load and extract value.
