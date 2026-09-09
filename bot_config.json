@@ -1,0 +1,22 @@
+{
+  "rm_daily_txns_ranjitha_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_RANJITHA",
+    "chat_id_env": "TELEGRAM_CHAT_ID_RANJITHA"
+  },
+  "rm_daily_txns_poornima_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_POORNIMA",
+    "chat_id_env": "TELEGRAM_CHAT_ID_POORNIMA"
+  },
+  "rm_daily_txns_pavana_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_PAVANA",
+    "chat_id_env": "TELEGRAM_CHAT_ID_PAVANA"
+  },
+  "rm_daily_txns_manav_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_MANAV",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
+  "rm_daily_txns_others_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
+    "chat_id_env": "TELEGRAM_CHAT_ID_OTHERS"
+  }
+}
