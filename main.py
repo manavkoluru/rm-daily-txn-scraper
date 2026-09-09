@@ -53,6 +53,40 @@ def load_user_name_mapping() -> dict:
     return {k: v for k, v in raw.items() if not k.startswith("_")}
 
 
+def load_user_rate_mapping() -> dict:
+    """Returns {R_ID: rate} where rate is 91 or 97.
+    Accounts in rate_91 list get 91, all others get 97.
+    """
+    path = os.path.join(_BASE, "user_rate_mapping.json")
+    with open(path, "r") as f:
+        raw = json.load(f)
+    rate_91_set = set(raw.get("rate_91", []))
+    return rate_91_set  # caller checks membership
+
+
+def investment_inr(usd: float, is_91: bool) -> float:
+    """Investment conversion — no tax.
+    91rs accounts: 94 INR/USD  ($1000 → ₹94,000)
+    97rs accounts: 100 INR/USD ($1000 → ₹1,00,000)
+    """
+    rate = 94 if is_91 else 100
+    return round(usd * rate, 2)
+
+
+def returns_inr(usd: float, is_91: bool) -> float:
+    """Returns/income conversion — 7% tax deducted.
+    91rs accounts: $10 → 10 * 91 * 0.93 = ₹846.30
+    97rs accounts: $10 → 10 * 97 * 0.93 = ₹902.10
+    """
+    rate = 91 if is_91 else 97
+    return round(usd * rate * 0.93, 2)
+
+
+def inr_bracket(amount_inr: float) -> str:
+    """Returns formatted INR string in brackets, e.g. (₹846.30)"""
+    return f"(₹{amount_inr:,.2f})"
+
+
 def get_accounts(bot_user_mapping: dict) -> list[str]:
     """Derives the unique set of R-ID usernames to scrape across all bots."""
     seen = set()
@@ -139,7 +173,7 @@ def parse_dashboard_html(html_content: str) -> dict:
                     elif "a-wallet" in label:
                         details["a_wallet_balance"] = amount
 
-    # 5. Reward / Bonus Cards
+    # 5. Reward / Bonus Cards (Revenue Reward, Direct Reward, Level Bonus, Remaining, etc.)
     cards = soup.find_all("div", class_="card")
     for card in cards:
         h5_elem = card.find("h5")
@@ -149,8 +183,30 @@ def parse_dashboard_html(html_content: str) -> dict:
             val_match = re.search(r"\$\s*([\d,]+\.?\d*)", h5_elem.get_text())
             if val_match:
                 amount = float(val_match.group(1).replace(",", ""))
-                key = label.lower().replace(" ", "_")
+                key = label.lower().replace(" ", "_").rstrip("_")
                 details[key] = amount
+
+    # 6. Most recent Credit transaction (E-wallet only)
+    txn_table = soup.find("h5", string=re.compile("Recent Transaction"))
+    if txn_table:
+        table = txn_table.find_parent("div", class_="card-body")
+        if table:
+            rows = table.find_all("tr")
+            for row in rows:
+                cells = row.find_all("td")
+                if len(cells) < 4:
+                    continue
+                wallet_badge = cells[1].find("span")
+                mode_badge = cells[2].find("span")
+                if not wallet_badge or not mode_badge:
+                    continue
+                if "E-wallet" in wallet_badge.get_text() and "Credit" in mode_badge.get_text():
+                    amt_match = re.search(r"\$\s*([\d,]+\.?\d*)", cells[3].get_text())
+                    if amt_match:
+                        details["recent_credit_amount"] = float(amt_match.group(1).replace(",", ""))
+                        # Keep only the date portion: "07-Sep-2026 12:00 AM" → "07-Sep-2026"
+                        details["recent_credit_date"] = cells[0].get_text(strip=True).split(" ")[0]
+                    break  # only the most recent
 
     return details
 
@@ -158,34 +214,46 @@ def parse_dashboard_html(html_content: str) -> dict:
 def fetch_data_for_account(page, username: str) -> dict:
     """Navigates, logs in, and extracts dashboard metrics for one account."""
     page.goto(LOGIN_URL)
-    page.fill("input[name='username']", username)
+    page.fill("input[name='user_id']", username)
     page.fill("input[name='password']", SHARED_PASSWORD)
     page.click("button[type='submit']")
     page.wait_for_url(DASHBOARD_URL)
-    page.wait_for_selector(".user-name")
+#     page.wait_for_selector(".user-name")
     return parse_dashboard_html(page.content())
 
 
-def format_account_report(username: str, data: dict, display_name: str = "") -> str:
-    """Formats dashboard data into Markdown for Telegram."""
+def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False) -> str:
+    """Formats dashboard data into Markdown for Telegram with INR conversion.
+
+    Active Investment: no tax (94 or 100 INR/USD)
+    E-Wallet / Remaining / Recent Credit: after 7% tax (91 or 97 INR/USD)
+    """
     label = f"{display_name} ({username})" if display_name else username
-    lines = [f"👤 *{label}*"]
+    rate_tag = "@91rs" if is_91 else "@97rs"
+    lines = [f"👤 *{label}* _{rate_tag}_"]
     if "user_id" in data:
         lines.append(f"  • *User ID:* `{data['user_id']}`")
     if "rank" in data:
         lines.append(f"  • *Rank:* {data['rank']}")
     if "active_investment" in data:
-        lines.append(f"  • *Active Inv:* ${data['active_investment']:,.2f}")
+        v = data["active_investment"]
+        lines.append(f"  • *Active Inv:* ${v:,.2f} {inr_bracket(investment_inr(v, is_91))}")
     if "e_wallet_balance" in data:
-        lines.append(f"  • *E-Wallet:* ${data['e_wallet_balance']:,.2f}")
-    if "a_wallet_balance" in data:
-        lines.append(f"  • *A-Wallet:* ${data['a_wallet_balance']:,.2f}")
+        v = data["e_wallet_balance"]
+        lines.append(f"  • *E-Wallet:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
+    if "remaining" in data:
+        v = data["remaining"]
+        lines.append(f"  • *Remaining:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
+    if "recent_credit_amount" in data:
+        v = data["recent_credit_amount"]
+        date_str = data.get("recent_credit_date", "")
+        lines.append(f"  • *Recent Credit:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))} on {date_str}")
     return "\n".join(lines)
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main():
+def main(only_bot: str = None):
     if not PLAYWRIGHT_AVAILABLE:
         print("Error: playwright is not installed. Run: pip install playwright && playwright install chromium")
         return
@@ -197,14 +265,17 @@ def main():
     bot_config = load_bot_config()
     bot_user_mapping = load_user_bot_mapping()
     name_mapping = load_user_name_mapping()
-    usernames = get_accounts(bot_user_mapping)
+    rate_91_set = load_user_rate_mapping()
+    filtered_mapping = {k: v for k, v in bot_user_mapping.items() if not only_bot or k == only_bot}
+    usernames = get_accounts(filtered_mapping)
 
     if not usernames:
         print("Error: user_bot_mapping.json has no user entries.")
         return
 
-    # Scrape each unique account once, cache the result
-    scraped: dict[str, str] = {}
+    # Scrape each unique account once — cache both formatted text and raw data
+    scraped_text: dict[str, str] = {}
+    scraped_data: dict[str, dict] = {}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -213,26 +284,60 @@ def main():
             context = browser.new_context()
             page = context.new_page()
             display_name = name_mapping.get(username, "")
+            is_91 = username in rate_91_set
             try:
                 data = fetch_data_for_account(page, username)
-                scraped[username] = f"✅ {format_account_report(username, data, display_name)}"
+                scraped_data[username] = data
+                scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91)}"
             except Exception as e:
                 label = f"{display_name} ({username})" if display_name else username
-                scraped[username] = f"❌ *{label}*: Failed (`{str(e)}`)"
+                scraped_data[username] = {}
+                scraped_text[username] = f"❌ *{label}*: Failed (`{str(e)}`)"
             finally:
                 context.close()
-            print(scraped[username])
+            print(scraped_text[username])
 
         browser.close()
 
     # Send per-bot consolidated messages using the bot → [user_ids] mapping
     for bot_name, user_ids in bot_user_mapping.items():
-        lines = [scraped[uid] for uid in user_ids if uid in scraped]
+        if only_bot and bot_name != only_bot:
+            continue
+        lines = [scraped_text[uid] for uid in user_ids if uid in scraped_text]
         if not lines:
             continue
-        message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines)
+
+        # Compute bot-level totals (USD and INR per account, then summed)
+        total_ewallet_usd = 0.0
+        total_ewallet_inr = 0.0
+        total_credit_usd = 0.0
+        total_credit_inr = 0.0
+
+        for uid in user_ids:
+            if uid not in scraped_data:
+                continue
+            d = scraped_data[uid]
+            is_91 = uid in rate_91_set
+            ew = d.get("e_wallet_balance", 0.0)
+            cr = d.get("recent_credit_amount", 0.0)
+            total_ewallet_usd += ew
+            total_ewallet_inr += returns_inr(ew, is_91)
+            total_credit_usd += cr
+            total_credit_inr += returns_inr(cr, is_91)
+
+        summary_footer = (
+            "\n\n━━━━━━━━━━━━━━━━━━━━\n"
+            f"💰 *Total E-Wallet:* ${total_ewallet_usd:,.2f} (₹{total_ewallet_inr:,.2f})\n"
+            f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})"
+        )
+
+        message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines) + summary_footer
         send_to_bot(bot_name, bot_config, message)
 
 
 if __name__ == "__main__":
-    main()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--bot", help="Run only this bot (e.g. rm_daily_txns_pavana_bot)")
+    args = parser.parse_args()
+    main(only_bot=args.bot)
