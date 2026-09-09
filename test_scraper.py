@@ -3,7 +3,7 @@ Integration tests — drives real Chrome via CDP to hit richmakers.space.
 No mocking. No playwright. Uses the system Chrome + CDP over WebSocket.
 
 Run:
-    RM_PASSWORD=Rich@959 pytest test_scraper.py -v -s
+    RM_PASSWORD=<password> pytest test_scraper.py -v -s
 
 Output also written to telegram_preview.txt.
 """
@@ -33,6 +33,22 @@ OUTPUT_FILE = os.path.join(BASE, "telegram_preview.txt")
 DIVIDER = "=" * 64
 
 
+# ── INR conversion (mirrors main.py) ──────────────────────────────────────────
+
+def investment_inr(usd: float, is_91: bool) -> float:
+    """No tax. 91rs: 94 INR/USD. 97rs: 100 INR/USD."""
+    return round(usd * (94 if is_91 else 100), 2)
+
+
+def returns_inr(usd: float, is_91: bool) -> float:
+    """7% tax deducted. 91rs: 91*0.93. 97rs: 97*0.93."""
+    return round(usd * (91 if is_91 else 97) * 0.93, 2)
+
+
+def inr_bracket(amount_inr: float) -> str:
+    return f"(₹{amount_inr:,.2f})"
+
+
 # ── Minimal CDP client ─────────────────────────────────────────────────────────
 
 class CDP:
@@ -46,7 +62,6 @@ class CDP:
         self._id += 1
         msg = {"id": self._id, "method": method, "params": params or {}}
         self._ws.send(json.dumps(msg))
-        # Drain events until we get our response
         while True:
             raw = self._ws.recv()
             data = json.loads(raw)
@@ -54,7 +69,6 @@ class CDP:
                 return data.get("result", {})
 
     def wait_for_load(self, timeout: int = 20):
-        """Polls document.readyState until complete."""
         deadline = time.time() + timeout
         while time.time() < deadline:
             result = self.send("Runtime.evaluate", {"expression": "document.readyState"})
@@ -91,7 +105,6 @@ class ChromeDriver:
         self._cdp: CDP | None = None
 
     def start(self):
-        # Kill any leftover Chrome on this port before starting
         subprocess.run(
             ["pkill", "-f", f"remote-debugging-port={CDP_PORT}"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
@@ -113,11 +126,9 @@ class ChromeDriver:
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
-        # Wait for CDP to become available
         for _ in range(30):
             try:
                 tabs = requests.get(f"http://localhost:{CDP_PORT}/json", timeout=2).json()
-                # Pick first real page tab (type == "page")
                 page_tabs = [t for t in tabs if t.get("type") == "page"]
                 if page_tabs:
                     break
@@ -151,9 +162,8 @@ class ChromeDriver:
 def scrape_account(cdp: CDP, username: str, password: str) -> dict:
     """Logs in and returns parsed dashboard data for one account."""
     cdp.navigate(LOGIN_URL)
-    time.sleep(2)  # Let JS fully initialise
+    time.sleep(2)
 
-    # Fill form using native input events so JS frameworks (React/Vue) register the values
     cdp.js(f"""
         (function() {{
             var u = document.querySelector("input[name='user_id']");
@@ -170,7 +180,6 @@ def scrape_account(cdp: CDP, username: str, password: str) -> dict:
     time.sleep(0.5)
     cdp.js("document.querySelector(\"button[type='submit']\").click()")
 
-    # Wait for redirect — accept any URL change away from login root
     deadline = time.time() + 7
     current_url = LOGIN_URL
     while time.time() < deadline:
@@ -181,7 +190,6 @@ def scrape_account(cdp: CDP, username: str, password: str) -> dict:
             break
         time.sleep(1.5)
     else:
-        # Dump page for inspection
         html = cdp.get_html()
         with open(os.path.join(BASE, "debug_login.html"), "w") as f:
             f.write(html)
@@ -190,7 +198,6 @@ def scrape_account(cdp: CDP, username: str, password: str) -> dict:
             "Page HTML saved to debug_login.html"
         )
 
-    # Now wait for the full dashboard to render
     dash_deadline = time.time() + 20
     while time.time() < dash_deadline:
         url_result = cdp.js("window.location.href")
@@ -200,25 +207,29 @@ def scrape_account(cdp: CDP, username: str, password: str) -> dict:
         time.sleep(1)
 
     cdp.wait_for_load()
-    time.sleep(1)  # Let JS render fully
+    time.sleep(1)
     html = cdp.get_html()
     return parse_dashboard_html(html)
 
 
 def parse_dashboard_html(html: str) -> dict:
+    """Mirrors main.py parse_dashboard_html — includes recent credit and remaining."""
     soup = BeautifulSoup(html, "html.parser")
     details = {}
 
+    # 1. User ID
     user_elem = soup.find(class_="user-name")
     if user_elem:
         m = re.search(r"R\d+", user_elem.get_text())
         if m:
             details["user_id"] = m.group(0)
 
+    # 2. Rank
     rank_elem = soup.find(class_="rank-badge")
     if rank_elem:
         details["rank"] = rank_elem.get_text(strip=True)
 
+    # 3. Active Investment
     active_inv = soup.find(string=re.compile("Active Investment"))
     if active_inv:
         parent = active_inv.find_parent("div", class_="ms-3")
@@ -227,6 +238,7 @@ def parse_dashboard_html(html: str) -> dict:
             if m:
                 details["active_investment"] = float(m.group(1).replace(",", ""))
 
+    # 4. Wallet balances (E-wallet only; A-wallet captured but unused in report)
     for progress in soup.find_all("div", class_="progress"):
         parent_div = progress.find_parent("div")
         if parent_div:
@@ -242,31 +254,61 @@ def parse_dashboard_html(html: str) -> dict:
                     elif "a-wallet" in label:
                         details["a_wallet_balance"] = amount
 
+    # 5. Reward / Bonus cards (includes Remaining)
     for card in soup.find_all("div", class_="card"):
         h5 = card.find("h5")
         p = card.find("p")
         if h5 and p:
             vm = re.search(r"\$\s*([\d,]+\.?\d*)", h5.get_text())
             if vm:
-                key = p.get_text(strip=True).lower().replace(" ", "_")
+                key = p.get_text(strip=True).lower().replace(" ", "_").rstrip("_")
                 details[key] = float(vm.group(1).replace(",", ""))
+
+    # 6. Most recent E-wallet Credit transaction
+    txn_table = soup.find("h5", string=re.compile("Recent Transaction"))
+    if txn_table:
+        table = txn_table.find_parent("div", class_="card-body")
+        if table:
+            for row in table.find_all("tr"):
+                cells = row.find_all("td")
+                if len(cells) < 4:
+                    continue
+                wallet_badge = cells[1].find("span")
+                mode_badge = cells[2].find("span")
+                if not wallet_badge or not mode_badge:
+                    continue
+                if "E-wallet" in wallet_badge.get_text() and "Credit" in mode_badge.get_text():
+                    amt_match = re.search(r"\$\s*([\d,]+\.?\d*)", cells[3].get_text())
+                    if amt_match:
+                        details["recent_credit_amount"] = float(amt_match.group(1).replace(",", ""))
+                        details["recent_credit_date"] = cells[0].get_text(strip=True).split(" ")[0]
+                    break
 
     return details
 
 
-def format_report(username: str, data: dict, display_name: str = "") -> str:
+def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False) -> str:
+    """Matches main.py format_account_report exactly."""
     label = f"{display_name} ({username})" if display_name else username
-    lines = [f"👤 *{label}*"]
+    rate_tag = "@91rs" if is_91 else "@97rs"
+    lines = [f"👤 *{label}* _{rate_tag}_"]
     if "user_id" in data:
         lines.append(f"  • *User ID:* `{data['user_id']}`")
     if "rank" in data:
         lines.append(f"  • *Rank:* {data['rank']}")
     if "active_investment" in data:
-        lines.append(f"  • *Active Inv:* ${data['active_investment']:,.2f}")
+        v = data["active_investment"]
+        lines.append(f"  • *Active Inv:* ${v:,.2f} {inr_bracket(investment_inr(v, is_91))}")
     if "e_wallet_balance" in data:
-        lines.append(f"  • *E-Wallet:* ${data['e_wallet_balance']:,.2f}")
-    if "a_wallet_balance" in data:
-        lines.append(f"  • *A-Wallet:* ${data['a_wallet_balance']:,.2f}")
+        v = data["e_wallet_balance"]
+        lines.append(f"  • *E-Wallet:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
+    if "remaining" in data:
+        v = data["remaining"]
+        lines.append(f"  • *Remaining:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
+    if "recent_credit_amount" in data:
+        v = data["recent_credit_amount"]
+        date_str = data.get("recent_credit_date", "")
+        lines.append(f"  • *Recent Credit:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))} on {date_str}")
     return "\n".join(lines)
 
 
@@ -282,7 +324,7 @@ def load_json(filename):
 def password():
     pwd = os.getenv("RM_PASSWORD", "")
     if not pwd:
-        pytest.fail("RM_PASSWORD not set. Run: RM_PASSWORD=Rich@959 pytest test_scraper.py -v -s")
+        pytest.fail("RM_PASSWORD not set. Run: RM_PASSWORD=<password> pytest test_scraper.py -v -s")
     return pwd
 
 
@@ -294,6 +336,15 @@ def bot_user_mapping():
 @pytest.fixture(scope="session")
 def name_mapping():
     return load_json("user_name_mapping.json")
+
+
+@pytest.fixture(scope="session")
+def rate_91_set():
+    raw = load_json("user_rate_mapping.json")
+    # load_json strips _comment; rate_91 is a list not a dict key — load raw
+    with open(os.path.join(BASE, "user_rate_mapping.json")) as f:
+        data = json.load(f)
+    return set(data.get("rate_91", []))
 
 
 # ── Tests ──────────────────────────────────────────────────────────────────────
@@ -313,10 +364,11 @@ class TestConfig:
 class TestSingleAccount:
     """Scrapes one account — fast smoke test."""
 
-    def test_first_account(self, bot_user_mapping, name_mapping, password):
+    def test_first_account(self, bot_user_mapping, name_mapping, rate_91_set, password):
         all_users = [uid for ids in bot_user_mapping.values() for uid in ids]
         username = all_users[0]
         display_name = name_mapping.get(username, "")
+        is_91 = username in rate_91_set
         label = f"{display_name} ({username})" if display_name else username
 
         print(f"\n  Scraping: {label}")
@@ -325,17 +377,26 @@ class TestSingleAccount:
             data = scrape_account(cdp, username, password)
 
         print(f"\n  Raw data: {data}")
-        report = format_report(username, data, display_name)
+        report = format_account_report(username, data, display_name, is_91)
         print(f"\n  Telegram message:\n{DIVIDER}\n{report}\n{DIVIDER}")
         assert data, f"No data parsed for {username}"
 
 
 class TestFullRun:
-    """Scrapes ALL accounts — shows exact per-bot Telegram messages."""
+    """Scrapes ALL accounts — shows exact per-bot Telegram messages including totals."""
 
-    def test_all_accounts(self, bot_user_mapping, name_mapping, password):
-        all_users = list({uid for ids in bot_user_mapping.values() for uid in ids})
-        scraped: dict[str, str] = {}
+    def test_all_accounts(self, bot_user_mapping, name_mapping, rate_91_set, password):
+        # Unique accounts in original order
+        seen = set()
+        all_users = []
+        for ids in bot_user_mapping.values():
+            for uid in ids:
+                if uid not in seen:
+                    seen.add(uid)
+                    all_users.append(uid)
+
+        scraped_text: dict[str, str] = {}
+        scraped_data: dict[str, dict] = {}
         failed = []
 
         print(f"\n  Scraping {len(all_users)} accounts...\n")
@@ -343,23 +404,48 @@ class TestFullRun:
         with ChromeDriver() as cdp:
             for username in all_users:
                 display_name = name_mapping.get(username, "")
+                is_91 = username in rate_91_set
                 label = f"{display_name} ({username})" if display_name else username
                 try:
                     data = scrape_account(cdp, username, password)
-                    scraped[username] = f"✅ {format_report(username, data, display_name)}"
+                    scraped_data[username] = data
+                    scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91)}"
                     print(f"  ✅ {label}")
                 except Exception as e:
-                    scraped[username] = f"❌ *{label}*: Failed (`{e}`)"
+                    scraped_data[username] = {}
+                    scraped_text[username] = f"❌ *{label}*: Failed (`{e}`)"
                     failed.append(label)
                     print(f"  ❌ {label}: {e}")
 
-        # Build per-bot messages
+        # Build per-bot messages with totals footer
         bot_messages = []
         for bot_name, user_ids in bot_user_mapping.items():
-            lines = [scraped[uid] for uid in user_ids if uid in scraped]
+            lines = [scraped_text[uid] for uid in user_ids if uid in scraped_text]
             if not lines:
                 continue
-            message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines)
+
+            total_ewallet_usd = 0.0
+            total_ewallet_inr = 0.0
+            total_credit_usd = 0.0
+            total_credit_inr = 0.0
+
+            for uid in user_ids:
+                d = scraped_data.get(uid, {})
+                is_91 = uid in rate_91_set
+                ew = d.get("e_wallet_balance", 0.0)
+                cr = d.get("recent_credit_amount", 0.0)
+                total_ewallet_usd += ew
+                total_ewallet_inr += returns_inr(ew, is_91)
+                total_credit_usd += cr
+                total_credit_inr += returns_inr(cr, is_91)
+
+            summary_footer = (
+                "\n\n━━━━━━━━━━━━━━━━━━━━\n"
+                f"💰 *Total E-Wallet:* ${total_ewallet_usd:,.2f} (₹{total_ewallet_inr:,.2f})\n"
+                f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})"
+            )
+
+            message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines) + summary_footer
             bot_messages.append({"bot": bot_name, "message": message})
             print(f"\n{DIVIDER}\n📬 BOT: {bot_name}\n{DIVIDER}")
             print(message)
@@ -368,7 +454,7 @@ class TestFullRun:
         # Write preview file
         with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
             f.write(f"Telegram Preview — {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-            f.write(f"Scraped: {len(scraped)}  |  Failed: {len(failed)}\n\n")
+            f.write(f"Scraped: {len(scraped_text)}  |  Failed: {len(failed)}\n\n")
             for item in bot_messages:
                 f.write(f"{DIVIDER}\nBOT: {item['bot']}\n{DIVIDER}\n")
                 f.write(item["message"])

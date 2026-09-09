@@ -112,10 +112,17 @@ def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
     chat_id = os.getenv(cfg["chat_id_env"])
 
     if not token or not chat_id:
-        print(
-            f"[WARN] Missing env vars '{cfg['token_env']}' or '{cfg['chat_id_env']}' "
-            f"for bot '{bot_name}'. Skipping."
-        )
+        if bot_name != "rm_daily_txns_others_bot":
+            print(
+                f"[WARN] Missing env vars for '{bot_name}'. "
+                "Falling back to rm_daily_txns_others_bot."
+            )
+            send_to_bot("rm_daily_txns_others_bot", bot_config, message)
+        else:
+            print(
+                f"[ERROR] Missing env vars '{cfg['token_env']}' or '{cfg['chat_id_env']}' "
+                "for others_bot. Cannot deliver message."
+            )
         return
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"

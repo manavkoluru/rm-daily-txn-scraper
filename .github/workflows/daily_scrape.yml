@@ -1,13 +1,49 @@
-name: Daily Scraper Schedule
+name: Daily Scraper & Weekly Withdrawal
 
 on:
   schedule:
-    - cron: '0 2 * * *'  # Runs daily at 02:00 UTC
-  workflow_dispatch:      # Allows manual trigger via GitHub UI
+    - cron: '30 2 * * *'  # Every day   08:00 IST (02:30 UTC) — scraper
+    - cron: '30 2 * * 6'  # Every Sat   08:00 IST (02:30 UTC) — withdrawal
+  workflow_dispatch:       # Manual trigger — GitHub UI or Telegram bot
+    inputs:
+      job:
+        description: 'Which job to run'
+        required: false
+        default: 'scraper'
+        type: choice
+        options:
+          - scraper
+          - withdrawal
+          - both
+      account:
+        description: 'Single account R-ID for withdrawal (e.g. R553232). Leave empty for all.'
+        required: false
+        default: ''
+        type: string
+
+# ── Shared env block (used by both jobs) ─────────────────────────────────────
+env:
+  RM_PASSWORD:                  ${{ secrets.RM_PASSWORD }}
+  TELEGRAM_BOT_TOKEN_RANJITHA:  ${{ secrets.TELEGRAM_BOT_TOKEN_RANJITHA }}
+  TELEGRAM_CHAT_ID_RANJITHA:    ${{ secrets.TELEGRAM_CHAT_ID_RANJITHA }}
+  TELEGRAM_BOT_TOKEN_POORNIMA:  ${{ secrets.TELEGRAM_BOT_TOKEN_POORNIMA }}
+  TELEGRAM_CHAT_ID_POORNIMA:    ${{ secrets.TELEGRAM_CHAT_ID_POORNIMA }}
+  TELEGRAM_BOT_TOKEN_PAVANA:    ${{ secrets.TELEGRAM_BOT_TOKEN_PAVANA }}
+  TELEGRAM_CHAT_ID_PAVANA:      ${{ secrets.TELEGRAM_CHAT_ID_PAVANA }}
+  TELEGRAM_BOT_TOKEN_MANAV:          ${{ secrets.TELEGRAM_BOT_TOKEN_MANAV }}
+  TELEGRAM_CHAT_ID_MANAV:            ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
+  TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV: ${{ secrets.TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV }}
+  TELEGRAM_BOT_TOKEN_OTHERS:    ${{ secrets.TELEGRAM_BOT_TOKEN_OTHERS }}
+  TELEGRAM_CHAT_ID_OTHERS:      ${{ secrets.TELEGRAM_CHAT_ID_OTHERS }}
 
 jobs:
+  # ── Daily scraper (runs every day) ─────────────────────────────────────────
   run-scraper:
+    name: Daily Account Scraper
     runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' && github.event.schedule == '30 2 * * *'
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'scraper' || github.event.inputs.job == 'both'))
     steps:
       - uses: actions/checkout@v4
 
@@ -22,29 +58,35 @@ jobs:
           pip install -r requirements.txt
           python -m playwright install --with-deps chromium
 
-      - name: Execute Scraper
-        env:
-          # ── Shared login password for all RM accounts ──────────────────────
-          RM_PASSWORD: ${{ secrets.RM_PASSWORD }}
-
-          # ── Bot: rm_daily_txns_ranjitha_bot ───────────────────────────────
-          TELEGRAM_BOT_TOKEN_RANJITHA: ${{ secrets.TELEGRAM_BOT_TOKEN_RANJITHA }}
-          TELEGRAM_CHAT_ID_RANJITHA: ${{ secrets.TELEGRAM_CHAT_ID_RANJITHA }}
-
-          # ── Bot: rm_daily_txns_poornima_bot ───────────────────────────────
-          TELEGRAM_BOT_TOKEN_POORNIMA: ${{ secrets.TELEGRAM_BOT_TOKEN_POORNIMA }}
-          TELEGRAM_CHAT_ID_POORNIMA: ${{ secrets.TELEGRAM_CHAT_ID_POORNIMA }}
-
-          # ── Bot: rm_daily_txns_pavana_bot ─────────────────────────────────
-          TELEGRAM_BOT_TOKEN_PAVANA: ${{ secrets.TELEGRAM_BOT_TOKEN_PAVANA }}
-          TELEGRAM_CHAT_ID_PAVANA: ${{ secrets.TELEGRAM_CHAT_ID_PAVANA }}
-
-          # ── Bot: rm_daily_txns_manav_bot ──────────────────────────────────
-          TELEGRAM_BOT_TOKEN_MANAV: ${{ secrets.TELEGRAM_BOT_TOKEN_MANAV }}
-          TELEGRAM_CHAT_ID_MANAV: ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
-
-          # ── Bot: rm_daily_txns_others_bot ─────────────────────────────────
-          TELEGRAM_BOT_TOKEN_OTHERS: ${{ secrets.TELEGRAM_BOT_TOKEN_OTHERS }}
-          TELEGRAM_CHAT_ID_OTHERS: ${{ secrets.TELEGRAM_CHAT_ID_OTHERS }}
-
+      - name: Run scraper
         run: python main.py
+
+  # ── Weekly withdrawal (runs every Saturday) ─────────────────────────────────
+  run-withdrawal:
+    name: Weekly Withdrawal
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' && github.event.schedule == '30 2 * * 6'
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdrawal' || github.event.inputs.job == 'both'))
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run withdrawal
+        run: |
+          ACCOUNT="${{ github.event.inputs.account }}"
+          if [ -n "$ACCOUNT" ]; then
+            python withdraw.py --account "$ACCOUNT"
+          else
+            python withdraw.py
+          fi

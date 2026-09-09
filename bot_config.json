@@ -1,4 +1,8 @@
 {
+  "rm_withdraw_saturday_manav_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
   "rm_daily_txns_ranjitha_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_RANJITHA",
     "chat_id_env": "TELEGRAM_CHAT_ID_RANJITHA"
