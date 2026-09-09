@@ -1,73 +1,100 @@
+import json
 import os
 import re
-from bs4 import BeautifulSoup
-from playwright.sync_api import sync_playwright
+from collections import defaultdict
+
 import requests
+from bs4 import BeautifulSoup
 
-# Global Configuration
-TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
+try:
+    from playwright.sync_api import sync_playwright
+    PLAYWRIGHT_AVAILABLE = True
+except ImportError:
+    PLAYWRIGHT_AVAILABLE = False
+
+# ── Constants ─────────────────────────────────────────────────────────────────
 LOGIN_URL = os.getenv("RM_LOGIN_URL", "https://app.richmakers.space")
-DASHBOARD_URL = os.getenv("RM_DASHBOARD_URL", "https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344")
+DASHBOARD_URL = os.getenv(
+    "RM_DASHBOARD_URL",
+    "https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344",
+)
+
+# Shared password for all accounts (set as repo secret RM_PASSWORD)
+SHARED_PASSWORD = os.getenv("RM_PASSWORD", "")
+
+_BASE = os.path.dirname(os.path.abspath(__file__))
 
 
-def load_accounts_from_env() -> list[dict]:
-    """Dynamically parses RM_USER_1, RM_PASS_1, RM_USER_2, RM_PASS_2, etc.,
+# ── Config loaders ────────────────────────────────────────────────────────────
 
-    from environment variables into an ACCOUNTS array.
+def load_bot_config() -> dict:
+    """Returns {bot_name: {token_env, chat_id_env}} from bot_config.json."""
+    path = os.path.join(_BASE, "bot_config.json")
+    with open(path, "r") as f:
+        return json.load(f)
+
+
+def load_user_bot_mapping() -> dict:
+    """Returns {bot_name: [R_ID, ...]} from user_bot_mapping.json.
+
+    Skips the '_comment' key automatically.
     """
-    accounts_map = {}
+    path = os.path.join(_BASE, "user_bot_mapping.json")
+    with open(path, "r") as f:
+        raw = json.load(f)
+    return {k: v for k, v in raw.items() if not k.startswith("_")}
 
-    # Inspect all environment variables for numbered user/pass combinations
-    for key, val in os.environ.items():
-        user_match = re.match(r"^RM_USER_(\d+)$", key)
-        pass_match = re.match(r"^RM_PASS_(\d+)$", key)
 
-        if user_match:
-            idx = user_match.group(1)
-            accounts_map.setdefault(idx, {})["username"] = val
-        elif pass_match:
-            idx = pass_match.group(1)
-            accounts_map.setdefault(idx, {})["password"] = val
+def load_user_name_mapping() -> dict:
+    """Returns {R_ID: display_name} from user_name_mapping.json."""
+    path = os.path.join(_BASE, "user_name_mapping.json")
+    with open(path, "r") as f:
+        raw = json.load(f)
+    return {k: v for k, v in raw.items() if not k.startswith("_")}
 
-    # Sort by index (1, 2, 3...) and filter out incomplete credentials
+
+def get_accounts(bot_user_mapping: dict) -> list[str]:
+    """Derives the unique set of R-ID usernames to scrape across all bots."""
+    seen = set()
     accounts = []
-    for idx in sorted(accounts_map.keys(), key=int):
-        acc = accounts_map[idx]
-        if acc.get("username") and acc.get("password"):
-            accounts.append(acc)
-
-    # Fallback to single account variables if numbered ones aren't set
-    if not accounts:
-        single_user = os.getenv("RM_USERNAME")
-        single_pass = os.getenv("RM_PASSWORD")
-        if single_user and single_pass:
-            accounts.append({"username": single_user, "password": single_pass})
-
+    for user_ids in bot_user_mapping.values():
+        for uid in user_ids:
+            if uid not in seen:
+                seen.add(uid)
+                accounts.append(uid)
     return accounts
 
 
-ACCOUNTS = load_accounts_from_env()
+# ── Telegram ──────────────────────────────────────────────────────────────────
 
-
-def send_telegram_notification(message: str):
-    """Sends notification to Telegram if credentials exist."""
-    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
-        print("Telegram credentials missing. Skipping notification.")
+def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
+    """Sends *message* via the named bot using its env-var credentials."""
+    cfg = bot_config.get(bot_name)
+    if not cfg:
+        print(f"[WARN] No config for bot '{bot_name}'. Skipping.")
         return
 
-    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-    payload = {
-        "chat_id": TELEGRAM_CHAT_ID,
-        "text": message,
-        "parse_mode": "Markdown",
-    }
+    token = os.getenv(cfg["token_env"])
+    chat_id = os.getenv(cfg["chat_id_env"])
+
+    if not token or not chat_id:
+        print(
+            f"[WARN] Missing env vars '{cfg['token_env']}' or '{cfg['chat_id_env']}' "
+            f"for bot '{bot_name}'. Skipping."
+        )
+        return
+
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
     try:
         res = requests.post(url, json=payload, timeout=10)
         res.raise_for_status()
+        print(f"[OK] Sent to {bot_name}")
     except Exception as e:
-        print(f"Failed to send Telegram notification: {e}")
+        print(f"[ERROR] Failed to send to {bot_name}: {e}")
 
+
+# ── Scraping ──────────────────────────────────────────────────────────────────
 
 def parse_dashboard_html(html_content: str) -> dict:
     """Parses extracted HTML content using BeautifulSoup."""
@@ -93,9 +120,7 @@ def parse_dashboard_html(html_content: str) -> dict:
         if parent:
             match = re.search(r"\$\s*([\d,]+\.?\d*)", parent.get_text())
             if match:
-                details["active_investment"] = float(
-                    match.group(1).replace(",", "")
-                )
+                details["active_investment"] = float(match.group(1).replace(",", ""))
 
     # 4. Wallet Balances
     wallet_containers = soup.find_all("div", class_="progress")
@@ -130,31 +155,21 @@ def parse_dashboard_html(html_content: str) -> dict:
     return details
 
 
-def fetch_data_for_account(page, account: dict) -> dict:
-    """Navigates, logs in, and extracts dashboard metrics for a single account."""
-    username = str(account.get("username"))
-    password = str(account.get("password"))
-
-    # 1. Navigate to login
+def fetch_data_for_account(page, username: str) -> dict:
+    """Navigates, logs in, and extracts dashboard metrics for one account."""
     page.goto(LOGIN_URL)
-
-    # 2. Fill credentials safely
     page.fill("input[name='username']", username)
-    page.fill("input[name='password']", password)
+    page.fill("input[name='password']", SHARED_PASSWORD)
     page.click("button[type='submit']")
-
-    # 3. Wait for dashboard elements to load
     page.wait_for_url(DASHBOARD_URL)
     page.wait_for_selector(".user-name")
-
-    # 4. Extract HTML content and parse
-    html_content = page.content()
-    return parse_dashboard_html(html_content)
+    return parse_dashboard_html(page.content())
 
 
-def format_account_report(acc_name: str, data: dict) -> str:
-    """Formats dashboard data dictionary into Markdown for Telegram."""
-    lines = [f"👤 *Account:* `{acc_name}`"]
+def format_account_report(username: str, data: dict, display_name: str = "") -> str:
+    """Formats dashboard data into Markdown for Telegram."""
+    label = f"{display_name} ({username})" if display_name else username
+    lines = [f"👤 *{label}*"]
     if "user_id" in data:
         lines.append(f"  • *User ID:* `{data['user_id']}`")
     if "rank" in data:
@@ -168,38 +183,55 @@ def format_account_report(acc_name: str, data: dict) -> str:
     return "\n".join(lines)
 
 
+# ── Main ──────────────────────────────────────────────────────────────────────
+
 def main():
-    if not ACCOUNTS:
-        print(
-            "Error: No valid account credentials found in environment variables."
-        )
+    if not PLAYWRIGHT_AVAILABLE:
+        print("Error: playwright is not installed. Run: pip install playwright && playwright install chromium")
         return
 
-    results = []
+    if not SHARED_PASSWORD:
+        print("Error: RM_PASSWORD secret is not set.")
+        return
+
+    bot_config = load_bot_config()
+    bot_user_mapping = load_user_bot_mapping()
+    name_mapping = load_user_name_mapping()
+    usernames = get_accounts(bot_user_mapping)
+
+    if not usernames:
+        print("Error: user_bot_mapping.json has no user entries.")
+        return
+
+    # Scrape each unique account once, cache the result
+    scraped: dict[str, str] = {}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
 
-        for acc in ACCOUNTS:
-            acc_label = acc.get("username", "Unknown Account")
-
+        for username in usernames:
             context = browser.new_context()
             page = context.new_page()
-
+            display_name = name_mapping.get(username, "")
             try:
-                data = fetch_data_for_account(page, acc)
-                formatted_summary = format_account_report(acc_label, data)
-                results.append(f"✅ {formatted_summary}")
+                data = fetch_data_for_account(page, username)
+                scraped[username] = f"✅ {format_account_report(username, data, display_name)}"
             except Exception as e:
-                results.append(f"❌ *{acc_label}*: Failed (`{str(e)}`)")
+                label = f"{display_name} ({username})" if display_name else username
+                scraped[username] = f"❌ *{label}*: Failed (`{str(e)}`)"
             finally:
                 context.close()
+            print(scraped[username])
 
         browser.close()
 
-    report = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(results)
-    print(report)
-    send_telegram_notification(report)
+    # Send per-bot consolidated messages using the bot → [user_ids] mapping
+    for bot_name, user_ids in bot_user_mapping.items():
+        lines = [scraped[uid] for uid in user_ids if uid in scraped]
+        if not lines:
+            continue
+        message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines)
+        send_to_bot(bot_name, bot_config, message)
 
 
 if __name__ == "__main__":

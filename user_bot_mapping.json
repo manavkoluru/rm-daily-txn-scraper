@@ -1,0 +1,18 @@
+{
+  "_comment": "Map each bot to the R-ID usernames it should receive reports for. A user can appear in multiple bots.",
+  "rm_daily_txns_ranjitha_bot": [
+    "R553232", "R252515", "R655231", "R531333", "R661246",
+    "R446254", "R346252", "R446446", "R546465", "R462236",
+    "R366545", "R114561", "R241653", "R645643", "R325553", "R416232"
+  ],
+  "rm_daily_txns_poornima_bot": ["R436362", "R255342"],
+  "rm_daily_txns_pavana_bot": ["R615541", "R524656"],
+  "rm_daily_txns_manav_bot": [
+    "R523341", "R526444", "R625263", "R611666", "R163446",
+    "R366352", "R316536", "R624521", "R531123", "R143412"
+  ],
+  "rm_daily_txns_others_bot": [
+    "R236566", "R632635", "R132623", "R144612",
+    "R136115", "R233246", "R655312", "R652564"
+  ]
+}
