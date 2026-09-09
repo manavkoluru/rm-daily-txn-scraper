@@ -303,7 +303,15 @@ def do_withdrawal(page, username: str, dry_run: bool = False) -> dict:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main(only_account: str = None, dry_run: bool = False):
+KNOWN_GROUPS = ["manav", "ranjitha", "pavana", "poornima", "others"]
+
+
+def group_to_bot_key(group: str) -> str:
+    """e.g. 'manav' → 'rm_daily_txns_manav_bot'"""
+    return f"rm_daily_txns_{group.lower()}_bot"
+
+
+def main(only_account: str = None, only_group: str = None, dry_run: bool = False):
     if not PLAYWRIGHT_AVAILABLE:
         print("playwright not installed. Run: pip install playwright && playwright install chromium")
         return
@@ -313,14 +321,22 @@ def main(only_account: str = None, dry_run: bool = False):
 
     mapping      = _load("user_bot_mapping.json")
     name_map     = _load("user_name_mapping.json")
-    bot_cfg      = _load("bot_config.json")   # bot_config has no _comment keys worth keeping
     rate_91_set  = load_rate_91_set()
-    all_accounts = get_all_accounts(mapping)
 
-    # Re-load bot_config raw (it has no _comment keys so _load is fine)
     with open(os.path.join(_BASE, "bot_config.json")) as f:
         bot_cfg = json.load(f)
 
+    # Filter by group (e.g. --group manav)
+    if only_group:
+        bot_key = group_to_bot_key(only_group)
+        if bot_key not in mapping:
+            print(f"Group '{only_group}' not found. Valid: {KNOWN_GROUPS}")
+            return
+        mapping = {bot_key: mapping[bot_key]}
+
+    all_accounts = get_all_accounts(mapping)
+
+    # Filter by single account (e.g. --account R553232)
     if only_account:
         all_accounts = [a for a in all_accounts if a == only_account]
         if not all_accounts:
@@ -337,8 +353,9 @@ def main(only_account: str = None, dry_run: bool = False):
     results: list[dict] = []
     tag = "[DRY RUN] " if dry_run else ""
 
+    scope = f"group:{only_group}" if only_group else (f"account:{only_account}" if only_account else "all accounts")
     print(f"\n{'═'*W}")
-    print(f"  💸 {tag}Weekly Withdrawal — {len(all_accounts)} account(s)")
+    print(f"  💸 {tag}Weekly Withdrawal — {len(all_accounts)} account(s) [{scope}]")
     print(f"  🪙  To     : {WALLET_ADDRESS}")
     print(f"  💵 Min    : ${MIN_WITHDRAWAL_USD}  |  Amount : floor(balance)")
     print(f"  🕗 Started: {datetime.now().strftime('%Y-%m-%d %H:%M:%S IST')}")
@@ -494,7 +511,8 @@ def main(only_account: str = None, dry_run: bool = False):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Automated weekly withdrawal — richmakers.space")
-    parser.add_argument("--dry-run",  action="store_true", help="Preview only, do not submit")
-    parser.add_argument("--account",  help="Single account R-ID (e.g. R523341)")
+    parser.add_argument("--dry-run", action="store_true", help="Preview only, do not submit")
+    parser.add_argument("--account", help="Single R-ID (e.g. R523341)")
+    parser.add_argument("--group",   help=f"Group name: {KNOWN_GROUPS}")
     args = parser.parse_args()
-    main(only_account=args.account, dry_run=args.dry_run)
+    main(only_account=args.account, only_group=args.group, dry_run=args.dry_run)

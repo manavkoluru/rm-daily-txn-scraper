@@ -20,6 +20,16 @@ on:
         required: false
         default: ''
         type: string
+      group:
+        description: 'Group name for withdrawal: manav | ranjitha | pavana | poornima | others'
+        required: false
+        default: ''
+        type: string
+      bot:
+        description: 'Group name for scraper: manav | ranjitha | pavana | poornima | others'
+        required: false
+        default: ''
+        type: string
 
 # ── Shared env block (used by both jobs) ─────────────────────────────────────
 env:
@@ -59,7 +69,13 @@ jobs:
           python -m playwright install --with-deps chromium
 
       - name: Run scraper
-        run: python main.py
+        run: |
+          BOT="${{ github.event.inputs.bot }}"
+          if [ -n "$BOT" ]; then
+            python main.py --bot "rm_daily_txns_${BOT}_bot"
+          else
+            python main.py
+          fi
 
   # ── Weekly withdrawal (runs every Saturday) ─────────────────────────────────
   run-withdrawal:
@@ -84,9 +100,10 @@ jobs:
 
       - name: Run withdrawal
         run: |
-          ACCOUNT="${{ github.event.inputs.account }}"
-          if [ -n "$ACCOUNT" ]; then
-            python withdraw.py --account "$ACCOUNT"
-          else
-            python withdraw.py
+          ARGS=""
+          if [ -n "${{ github.event.inputs.account }}" ]; then
+            ARGS="--account ${{ github.event.inputs.account }}"
+          elif [ -n "${{ github.event.inputs.group }}" ]; then
+            ARGS="--group ${{ github.event.inputs.group }}"
           fi
+          python withdraw.py $ARGS
