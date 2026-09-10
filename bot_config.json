@@ -5,11 +5,11 @@
   },
   "rm_daily_txns_ranjitha_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_RANJITHA",
-    "chat_id_env": "TELEGRAM_CHAT_ID_RANJITHA"
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
   },
   "rm_daily_txns_poornima_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_POORNIMA",
-    "chat_id_env": "TELEGRAM_CHAT_ID_POORNIMA"
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
   },
   "rm_daily_txns_pavana_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_PAVANA",
@@ -21,6 +21,14 @@
   },
   "rm_daily_txns_others_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
-    "chat_id_env": "TELEGRAM_CHAT_ID_OTHERS"
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
+  "rm_daily_txns_vasu_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_VASU",
+    "chat_id_env": "TELEGRAM_CHAT_ID_VASU"
+  },
+  "rm_weekly_withdraw_vasu_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_VASU",
+    "chat_id_env": "TELEGRAM_CHAT_ID_VASU"
   }
 }

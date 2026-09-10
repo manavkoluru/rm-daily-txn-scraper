@@ -341,6 +341,10 @@ def main(only_bot: str = None):
         message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines) + summary_footer
         send_to_bot(bot_name, bot_config, message)
 
+        # Also send to vasu and others bot if this is vasu's group
+        if bot_name == "rm_daily_txns_vasu_bot":
+            send_to_bot("rm_daily_txns_others_bot", bot_config, message)
+
 
 if __name__ == "__main__":
     import argparse

@@ -303,7 +303,7 @@ def do_withdrawal(page, username: str, dry_run: bool = False) -> dict:
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-KNOWN_GROUPS = ["manav", "ranjitha", "pavana", "poornima", "others"]
+KNOWN_GROUPS = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu"]
 
 
 def group_to_bot_key(group: str) -> str:
@@ -507,6 +507,10 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
         f"✅ {len(success_list)}  ⏭ {len(skipped_list)}  ❌ {len(error_list)}"
     )
     send_to_bot(WITHDRAW_BOT, bot_cfg, msg)
+
+    # Also send to vasu and others bots
+    send_to_bot("rm_daily_txns_vasu_bot", bot_cfg, msg)
+    send_to_bot("rm_daily_txns_others_bot", bot_cfg, msg)
 
 
 if __name__ == "__main__":

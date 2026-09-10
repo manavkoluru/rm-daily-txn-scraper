@@ -1,41 +1,25 @@
 """
 Telegram → GitHub Actions trigger bot.
 
-Listens for commands in the withdrawal bot's chat and fires GitHub Actions
-workflow_dispatch events. Run this on any machine (your Mac, a VPS, etc.)
-while you want manual control.
+Polls TWO bots simultaneously:
+  1. @rm_daily_txns_manav_bot    — daily scraper commands only
+  2. @rm_withdraw_saturday_manav_bot — all commands (daily + withdrawal)
+
+Run:  python3 app/bot_trigger.py
+Deploy to Railway for 24/7 operation (NOT Vercel — needs persistent process).
 
 ─────────────────────────────────────────────────────────
-SETUP (one-time)
+ENV VARS REQUIRED
 ─────────────────────────────────────────────────────────
-1. Create a GitHub Personal Access Token (PAT):
-   → https://github.com/settings/tokens/new
-   → Scopes: check ✅  "workflow"
-   → Copy the token
-
-2. Set environment variables (add to ~/.zshrc or ~/.bash_profile):
-
-   export TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV="<your_withdrawal_bot_token>"
-   export TELEGRAM_CHAT_ID_MANAV="<your_chat_id>"
-   export GITHUB_PAT="<your_github_pat>"
-   export GITHUB_OWNER="<your_github_username_or_org>"
-   export GITHUB_REPO="rm-daily-txn-scraper"
-
-3. Run:
-   python3 bot_trigger.py
-
-─────────────────────────────────────────────────────────
-TELEGRAM COMMANDS (send in the bot's chat)
-─────────────────────────────────────────────────────────
-  /help                  — show all commands
-  /withdraw_all          — run withdrawal for ALL accounts now
-  /withdraw R553232      — run withdrawal for one specific account
-  /scrape                — run the daily scraper now
-  /status                — show last workflow run status
+  TELEGRAM_BOT_TOKEN_MANAV          — daily bot token
+  TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV — withdrawal bot token
+  TELEGRAM_CHAT_ID_MANAV            — authorised chat ID (same for both)
+  GITHUB_PAT                        — GitHub PAT with 'workflow' scope
+  GITHUB_OWNER                      — GitHub username / org
+  GITHUB_REPO                       — repo name (default: rm-daily-txn-scraper)
 ─────────────────────────────────────────────────────────
 """
 
-import json
 import os
 import sys
 import time
@@ -45,64 +29,83 @@ import requests
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-BOT_TOKEN    = os.getenv("TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV", "")
-ALLOWED_CHAT = os.getenv("TELEGRAM_CHAT_ID_MANAV", "")       # only this chat can send commands
-GITHUB_PAT   = os.getenv("GITHUB_PAT", "")
-GITHUB_OWNER = os.getenv("GITHUB_OWNER", "")
-GITHUB_REPO  = os.getenv("GITHUB_REPO", "rm-daily-txn-scraper")
-WORKFLOW_FILE = "daily_scrape.yml"
-BRANCH        = "main"
+DAILY_BOT_TOKEN        = os.getenv("TELEGRAM_BOT_TOKEN_MANAV", "")
+WITHDRAW_BOT_TOKEN     = os.getenv("TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV", "")
+VASU_BOT_TOKEN         = os.getenv("TELEGRAM_BOT_TOKEN_VASU", "")
+ALLOWED_CHAT           = os.getenv("TELEGRAM_CHAT_ID_MANAV", "")
+ALLOWED_CHAT_VASU      = os.getenv("TELEGRAM_CHAT_ID_VASU", "")
+GITHUB_PAT         = os.getenv("GITHUB_PAT", "")
+GITHUB_OWNER       = os.getenv("GITHUB_OWNER", "")
+GITHUB_REPO        = os.getenv("GITHUB_REPO", "rm-daily-txn-scraper")
+WORKFLOW_FILE      = "daily_scrape.yml"
+BRANCH             = "main"
 
-TELEGRAM_API  = f"https://api.telegram.org/bot{BOT_TOKEN}"
 GITHUB_API    = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
+KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu"]
 
-KNOWN_GROUPS = ["manav", "ranjitha", "pavana", "poornima", "others"]
+# ── Help texts ────────────────────────────────────────────────────────────────
 
-HELP_TEXT = """
-🤖 *RM Bot — Commands*
+DAILY_HELP = """
+🤖 *RM Daily Bot — Commands*
 
-*Daily scraper:*
-/daily                — Run scraper for all accounts
-/daily manav          — Scraper for Manav's accounts only
-/daily ranjitha       — Scraper for Ranjitha's accounts only
-/daily pavana         — Scraper for Pavana's accounts only
-/daily poornima       — Scraper for Poornima's accounts only
-/daily others         — Scraper for Others' accounts only
+*📊 Daily scraper:*
+`/daily`              — All accounts
+`/daily manav`        — Manav's accounts only
+`/daily ranjitha`     — Ranjitha's accounts only
+`/daily pavana`       — Pavana's accounts only
+`/daily poornima`     — Poornima's accounts only
+`/daily others`       — Others' accounts only
 
-*Withdrawals:*
-/withdraw manav       — Withdraw Manav's accounts
-/withdraw ranjitha    — Withdraw Ranjitha's accounts
-/withdraw pavana      — Withdraw Pavana's accounts
-/withdraw poornima    — Withdraw Poornima's accounts
-/withdraw others      — Withdraw Others' accounts
-/withdraw\\_all         — Withdraw all accounts
-/withdraw R553232     — Withdraw single account
+*ℹ️ Info:*
+`/status`             — Last 5 GitHub Actions runs
+`/help`               — Show this message
+""".strip()
 
-*Status:*
-/status               — Last 5 GitHub Actions runs
-/help                 — Show this message
+WITHDRAW_HELP = """
+🤖 *RM Master Bot — Commands*
+
+*📊 Daily scraper:*
+`/daily`              — All accounts
+`/daily manav`        — Manav's accounts only
+`/daily ranjitha`     — Ranjitha's accounts only
+`/daily pavana`       — Pavana's accounts only
+`/daily poornima`     — Poornima's accounts only
+`/daily others`       — Others' accounts only
+
+*💸 Withdrawals:*
+`/withdraw_all`       — All accounts
+`/withdraw manav`     — Manav's accounts
+`/withdraw ranjitha`  — Ranjitha's accounts
+`/withdraw pavana`    — Pavana's accounts
+`/withdraw poornima`  — Poornima's accounts
+`/withdraw others`    — Others' accounts
+`/withdraw R553232`   — Single account by R\\-ID
+
+*ℹ️ Info:*
+`/status`             — Last 5 GitHub Actions runs
+`/help`               — Show this message
 """.strip()
 
 
 # ── Telegram helpers ──────────────────────────────────────────────────────────
 
-def tg_send(chat_id: str, text: str, parse_mode: str = "Markdown") -> None:
+def tg_send(token: str, chat_id: str, text: str) -> None:
     try:
         requests.post(
-            f"{TELEGRAM_API}/sendMessage",
-            json={"chat_id": chat_id, "text": text, "parse_mode": parse_mode},
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            json={"chat_id": chat_id, "text": text, "parse_mode": "Markdown"},
             timeout=10,
         )
     except Exception as e:
-        print(f"[WARN] Failed to send Telegram message: {e}")
+        print(f"[WARN] Telegram send failed: {e}")
 
 
-def tg_get_updates(offset: int) -> list:
+def tg_get_updates(token: str, offset: int) -> list:
     try:
         r = requests.get(
-            f"{TELEGRAM_API}/getUpdates",
-            params={"offset": offset, "timeout": 30, "allowed_updates": ["message"]},
-            timeout=40,
+            f"https://api.telegram.org/bot{token}/getUpdates",
+            params={"offset": offset, "timeout": 25, "allowed_updates": ["message"]},
+            timeout=35,
         )
         r.raise_for_status()
         return r.json().get("result", [])
@@ -111,7 +114,7 @@ def tg_get_updates(offset: int) -> list:
         return []
 
 
-# ── GitHub Actions helpers ────────────────────────────────────────────────────
+# ── GitHub Actions ────────────────────────────────────────────────────────────
 
 def gh_headers() -> dict:
     return {
@@ -122,189 +125,244 @@ def gh_headers() -> dict:
 
 
 def trigger_workflow(job: str, account: str = "", group: str = "", bot: str = "") -> tuple[bool, str]:
-    """
-    Fires a workflow_dispatch event.
-    Returns (success, message).
-    """
     inputs = {"job": job}
-    if account:
-        inputs["account"] = account
-    if group:
-        inputs["group"] = group
-    if bot:
-        inputs["bot"] = bot
-
+    if account: inputs["account"] = account
+    if group:   inputs["group"]   = group
+    if bot:     inputs["bot"]     = bot
     url = f"{GITHUB_API}/actions/workflows/{WORKFLOW_FILE}/dispatches"
     try:
-        r = requests.post(
-            url,
-            headers=gh_headers(),
-            json={"ref": BRANCH, "inputs": inputs},
-            timeout=15,
-        )
-        if r.status_code == 204:
-            return True, "Workflow triggered successfully ✅"
-        else:
-            return False, f"GitHub returned {r.status_code}: {r.text[:200]}"
+        r = requests.post(url, headers=gh_headers(),
+                          json={"ref": BRANCH, "inputs": inputs}, timeout=15)
+        return (True, "ok") if r.status_code == 204 else (False, f"GitHub {r.status_code}: {r.text[:200]}")
     except Exception as e:
-        return False, f"Request error: {e}"
+        return False, str(e)
 
 
-def get_last_run_status() -> str:
-    """Returns a summary of the last few workflow runs."""
-    url = f"{GITHUB_API}/actions/workflows/{WORKFLOW_FILE}/runs"
+def get_status() -> str:
     try:
-        r = requests.get(url, headers=gh_headers(), params={"per_page": 5}, timeout=10)
+        r = requests.get(f"{GITHUB_API}/actions/workflows/{WORKFLOW_FILE}/runs",
+                         headers=gh_headers(), params={"per_page": 5}, timeout=10)
         r.raise_for_status()
         runs = r.json().get("workflow_runs", [])
         if not runs:
             return "No runs found."
         lines = ["*Last 5 workflow runs:*\n"]
         for run in runs:
-            status     = run["status"]
             conclusion = run.get("conclusion") or "in_progress"
-            triggered  = run.get("event", "?")
+            event      = run.get("event", "?")
             created    = run["created_at"][:16].replace("T", " ")
             icon = {"success": "✅", "failure": "❌", "in_progress": "🔄", "cancelled": "⏹"}.get(conclusion, "❓")
-            lines.append(f"{icon} `{created}` — {conclusion} ({triggered})")
+            lines.append(f"{icon} `{created}` — {conclusion} ({event})")
         return "\n".join(lines)
     except Exception as e:
         return f"Could not fetch status: {e}"
 
 
-# ── Command handler ───────────────────────────────────────────────────────────
+# ── Command handlers ──────────────────────────────────────────────────────────
 
-def handle_command(chat_id: str, text: str) -> None:
-    text = text.strip()
-    now  = datetime.now().strftime("%d %b %Y %H:%M IST")
-
-    # Security: only respond to the authorised chat
-    if str(chat_id) != str(ALLOWED_CHAT):
-        print(f"[WARN] Ignored message from unauthorised chat: {chat_id}")
-        return
-
-    print(f"[{now}] Command from {chat_id}: {text!r}")
+def handle_daily_commands(token: str, chat_id: str, text: str) -> None:
+    """Handles commands for the daily bot — scraper only, no withdrawals."""
+    now = datetime.now().strftime("%d %b %Y %H:%M IST")
 
     if text.startswith("/help") or text == "/start":
-        tg_send(chat_id, HELP_TEXT)
+        tg_send(token, chat_id, DAILY_HELP)
+
+    elif text.startswith("/daily"):
+        parts = text.split()
+        arg   = parts[1].lower() if len(parts) > 1 else ""
+
+        if arg and arg in KNOWN_GROUPS:
+            # Group: /daily manav
+            label = f"*{arg.capitalize()}* group"
+            tg_send(token, chat_id, f"⏳ Running daily scraper for {label}…")
+            ok, err = trigger_workflow("scraper", bot=arg)
+            if ok:
+                tg_send(token, chat_id,
+                    f"✅ *Scraper started for {label}!*\n"
+                    f"Results with balances, E-Wallet & INR totals will arrive in the group's chat.\n"
+                    f"_Triggered at {now}_"
+                )
+            else:
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
+
+        elif arg and arg.upper().startswith("R") and arg[1:].isdigit():
+            # Single account: /daily R553232
+            account = arg.upper()
+            tg_send(token, chat_id, f"⏳ Running daily scraper for *{account}*…")
+            ok, err = trigger_workflow("scraper", account=account)
+            if ok:
+                tg_send(token, chat_id,
+                    f"✅ *Scraper started for {account}!*\n"
+                    f"_Triggered at {now}_"
+                )
+            else:
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
+
+        elif not arg:
+            # All accounts: /daily
+            tg_send(token, chat_id, "⏳ Running daily scraper for *all accounts*…")
+            ok, err = trigger_workflow("scraper")
+            if ok:
+                tg_send(token, chat_id,
+                    f"✅ *Scraper started for all accounts!*\n"
+                    f"Results with balances, E-Wallet & INR totals will arrive in each group's chat.\n"
+                    f"_Triggered at {now}_"
+                )
+            else:
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
+
+        else:
+            groups_str = " | ".join(KNOWN_GROUPS)
+            tg_send(token, chat_id,
+                f"❌ Unknown argument: `{arg}`\n"
+                f"Groups: `{groups_str}`\n"
+                f"Single account: `/daily R553232`\n"
+                f"All: `/daily`"
+            )
+
+    elif text.startswith("/status"):
+        tg_send(token, chat_id, "⏳ Fetching status…")
+        tg_send(token, chat_id, get_status())
+
+    elif text.startswith("/withdraw"):
+        tg_send(token, chat_id,
+            "⚠️ Withdrawal commands are not available here.\n"
+            "Use @rm\\_withdraw\\_saturday\\_manav\\_bot for withdrawals."
+        )
+
+    elif text.startswith("/"):
+        tg_send(token, chat_id, "❓ Unknown command. Send /help for all commands.")
+
+
+def handle_all_commands(token: str, chat_id: str, text: str) -> None:
+    """Handles all commands for the withdrawal bot — daily + withdrawals."""
+    now = datetime.now().strftime("%d %b %Y %H:%M IST")
+
+    if text.startswith("/help") or text == "/start":
+        tg_send(token, chat_id, WITHDRAW_HELP)
+
+    elif text.startswith("/daily"):
+        parts = text.split()
+        arg   = parts[1].lower() if len(parts) > 1 else ""
+
+        if arg and arg in KNOWN_GROUPS:
+            # Group: /daily manav
+            label = f"*{arg.capitalize()}* group"
+            tg_send(token, chat_id, f"⏳ Running daily scraper for {label}…")
+            ok, err = trigger_workflow("scraper", bot=arg)
+            if ok:
+                tg_send(token, chat_id,
+                    f"✅ *Scraper started for {label}!*\n"
+                    f"Results will arrive in the group's chat.\n"
+                    f"_Triggered at {now}_"
+                )
+            else:
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
+
+        elif arg and arg.upper().startswith("R") and arg[1:].isdigit():
+            # Single account: /daily R553232
+            account = arg.upper()
+            tg_send(token, chat_id, f"⏳ Running daily scraper for *{account}*…")
+            ok, err = trigger_workflow("scraper", account=account)
+            if ok:
+                tg_send(token, chat_id,
+                    f"✅ *Scraper started for {account}!*\n"
+                    f"_Triggered at {now}_"
+                )
+            else:
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
+
+        elif not arg:
+            # All accounts: /daily
+            tg_send(token, chat_id, "⏳ Running daily scraper for *all accounts*…")
+            ok, err = trigger_workflow("scraper")
+            if ok:
+                tg_send(token, chat_id,
+                    f"✅ *Scraper started for all accounts!*\n"
+                    f"Results will arrive in each group's chat.\n"
+                    f"_Triggered at {now}_"
+                )
+            else:
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
+
+        else:
+            groups_str = " | ".join(KNOWN_GROUPS)
+            tg_send(token, chat_id,
+                f"❌ Unknown argument: `{arg}`\n"
+                f"Groups: `{groups_str}`\n"
+                f"Single account: `/daily R553232`\n"
+                f"All: `/daily`"
+            )
 
     elif text.startswith("/withdraw_all"):
-        tg_send(chat_id, "⏳ Triggering withdrawal for *all accounts*…")
-        ok, msg = trigger_workflow("withdrawal")
+        tg_send(token, chat_id, "⏳ Triggering withdrawal for *all accounts*…")
+        ok, err = trigger_workflow("withdrawal")
         if ok:
-            tg_send(chat_id,
-                f"✅ *Withdrawal job started!*\n"
-                f"All accounts will be processed. Results will arrive in this chat once done.\n"
+            tg_send(token, chat_id,
+                f"✅ *Withdrawal started for all accounts!*\n"
+                f"Results will arrive here once done.\n"
                 f"_Triggered at {now}_"
             )
         else:
-            tg_send(chat_id, f"❌ Failed to trigger:\n`{msg}`")
+            tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
 
     elif text.startswith("/withdraw "):
         parts = text.split()
         arg   = parts[1].lower() if len(parts) > 1 else ""
 
         if arg in KNOWN_GROUPS:
-            # Group withdrawal: /withdraw manav
-            tg_send(chat_id, f"⏳ Triggering withdrawal for *{arg.capitalize()}* group…")
-            ok, msg = trigger_workflow("withdrawal", group=arg)
+            tg_send(token, chat_id, f"⏳ Triggering withdrawal for *{arg.capitalize()}* group…")
+            ok, err = trigger_workflow("withdrawal", group=arg)
             if ok:
-                tg_send(chat_id,
+                tg_send(token, chat_id,
                     f"✅ *Withdrawal started for {arg.capitalize()} group!*\n"
-                    f"Results will arrive in this chat once done.\n"
                     f"_Triggered at {now}_"
                 )
             else:
-                tg_send(chat_id, f"❌ Failed to trigger:\n`{msg}`")
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
 
         elif arg.upper().startswith("R") and arg[1:].isdigit():
-            # Single account: /withdraw R553232
             account = arg.upper()
-            tg_send(chat_id, f"⏳ Triggering withdrawal for *{account}*…")
-            ok, msg = trigger_workflow("withdrawal", account=account)
+            tg_send(token, chat_id, f"⏳ Triggering withdrawal for *{account}*…")
+            ok, err = trigger_workflow("withdrawal", account=account)
             if ok:
-                tg_send(chat_id,
+                tg_send(token, chat_id,
                     f"✅ *Withdrawal started for {account}!*\n"
-                    f"Result will arrive in this chat once done.\n"
                     f"_Triggered at {now}_"
                 )
             else:
-                tg_send(chat_id, f"❌ Failed to trigger:\n`{msg}`")
+                tg_send(token, chat_id, f"❌ Failed:\n`{err}`")
 
         else:
-            groups_str = " | ".join(KNOWN_GROUPS)
-            tg_send(chat_id,
-                f"❌ Unknown argument: `{arg}`\n\n"
-                f"Groups: `{groups_str}`\n"
+            tg_send(token, chat_id,
+                f"❌ Unknown: `{arg}`\n"
+                f"Groups: `{'` | `'.join(KNOWN_GROUPS)}`\n"
                 f"Single account: `/withdraw R553232`\n"
-                f"All accounts: `/withdraw_all`"
+                f"All: `/withdraw_all`"
             )
-
-    elif text.startswith("/daily"):
-        parts = text.split()
-        grp   = parts[1].lower() if len(parts) > 1 else ""
-
-        if grp and grp not in KNOWN_GROUPS:
-            groups_str = " | ".join(KNOWN_GROUPS)
-            tg_send(chat_id,
-                f"❌ Unknown group: `{grp}`\n"
-                f"Valid groups: `{groups_str}`\n"
-                f"Or just `/daily` for all accounts."
-            )
-            return
-
-        if grp:
-            tg_send(chat_id, f"⏳ Triggering daily scraper for *{grp.capitalize()}* group…")
-            ok, msg = trigger_workflow("scraper", bot=grp)
-            label = f"{grp.capitalize()} group"
-        else:
-            tg_send(chat_id, "⏳ Triggering daily scraper for *all accounts*…")
-            ok, msg = trigger_workflow("scraper")
-            label = "all accounts"
-
-        if ok:
-            tg_send(chat_id,
-                f"✅ *Daily scraper started for {label}!*\n"
-                f"Results with balances, E-Wallet totals & INR will arrive in the group's chat once done.\n"
-                f"_Triggered at {now}_"
-            )
-        else:
-            tg_send(chat_id, f"❌ Failed to trigger:\n`{msg}`")
-
-    elif text.startswith("/scrape"):
-        # /scrape kept as alias for /daily (all accounts)
-        tg_send(chat_id, "⏳ Triggering daily scraper for *all accounts*…")
-        ok, msg = trigger_workflow("scraper")
-        if ok:
-            tg_send(chat_id,
-                f"✅ *Scraper job started!*\n"
-                f"Results will arrive in each bot's chat once done.\n"
-                f"_Triggered at {now}_"
-            )
-        else:
-            tg_send(chat_id, f"❌ Failed to trigger:\n`{msg}`")
 
     elif text.startswith("/status"):
-        tg_send(chat_id, "⏳ Fetching workflow status…")
-        status_text = get_last_run_status()
-        tg_send(chat_id, status_text)
+        tg_send(token, chat_id, "⏳ Fetching status…")
+        tg_send(token, chat_id, get_status())
 
     elif text.startswith("/"):
-        tg_send(chat_id, f"❓ Unknown command. Send /help for available commands.")
+        tg_send(token, chat_id, "❓ Unknown command. Send /help for all commands.")
 
 
-# ── Main loop ─────────────────────────────────────────────────────────────────
+# ── Main loop — polls both bots ───────────────────────────────────────────────
 
 def validate_env() -> bool:
     missing = []
-    if not BOT_TOKEN:    missing.append("TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV")
-    if not ALLOWED_CHAT: missing.append("TELEGRAM_CHAT_ID_MANAV")
-    if not GITHUB_PAT:   missing.append("GITHUB_PAT")
-    if not GITHUB_OWNER: missing.append("GITHUB_OWNER")
+    if not DAILY_BOT_TOKEN:       missing.append("TELEGRAM_BOT_TOKEN_MANAV")
+    if not WITHDRAW_BOT_TOKEN:    missing.append("TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV")
+    if not ALLOWED_CHAT:          missing.append("TELEGRAM_CHAT_ID_MANAV")
+    if not VASU_BOT_TOKEN:        missing.append("TELEGRAM_BOT_TOKEN_VASU")
+    if not ALLOWED_CHAT_VASU:     missing.append("TELEGRAM_CHAT_ID_VASU")
+    if not GITHUB_PAT:            missing.append("GITHUB_PAT")
+    if not GITHUB_OWNER:          missing.append("GITHUB_OWNER")
     if missing:
-        print("❌ Missing environment variables:")
-        for m in missing:
-            print(f"   export {m}=<value>")
+        print("❌ Missing env vars:")
+        for m in missing: print(f"   export {m}=<value>")
         return False
     return True
 
@@ -313,40 +371,76 @@ def main():
     if not validate_env():
         sys.exit(1)
 
-    print("=" * 56)
-    print("  RM Withdrawal Trigger Bot — listening for commands")
-    print(f"  Chat  : {ALLOWED_CHAT}")
+    W = 60
+    print("=" * W)
+    print("  RM Trigger Bot — polling 3 bots")
+    print("  ├─ @rm_daily_txns_manav_bot          → scraper only")
+    print("  ├─ @rm_withdraw_saturday_manav_bot   → all commands (manav)")
+    print("  └─ @rm_weekly_withdraw_vasu_bot      → all commands (vasu)")
     print(f"  Repo  : {GITHUB_OWNER}/{GITHUB_REPO}")
-    print(f"  Branch: {BRANCH}")
-    print("=" * 56)
-    print("  Commands: /withdraw_all  /withdraw <R-ID>  /scrape  /status  /help")
-    print("  Press Ctrl+C to stop.\n")
+    print("  Press Ctrl+C to stop.")
+    print("=" * W + "\n")
 
-    # Announce startup in the chat
-    tg_send(
-        ALLOWED_CHAT,
+    now = datetime.now().strftime("%d %b %Y %H:%M IST")
+    startup_msg = (
         f"🤖 *RM Trigger Bot is online*\n"
-        f"_Started {datetime.now().strftime('%d %b %Y %H:%M IST')}_\n\n"
+        f"_Started {now}_\n\n"
         f"Send /help to see available commands."
     )
+    tg_send(DAILY_BOT_TOKEN,       ALLOWED_CHAT, startup_msg)
+    tg_send(WITHDRAW_BOT_TOKEN,    ALLOWED_CHAT, startup_msg)
+    tg_send(VASU_BOT_TOKEN,        ALLOWED_CHAT_VASU, startup_msg)
 
-    offset = 0
+    daily_offset       = 0
+    withdraw_offset    = 0
+    vasu_offset        = 0
+
     while True:
         try:
-            updates = tg_get_updates(offset)
-            for update in updates:
-                offset = update["update_id"] + 1
-                msg = update.get("message", {})
+            # Poll daily bot — Manav
+            for update in tg_get_updates(DAILY_BOT_TOKEN, daily_offset):
+                daily_offset = update["update_id"] + 1
+                msg     = update.get("message", {})
                 text    = msg.get("text", "")
                 chat_id = str(msg.get("chat", {}).get("id", ""))
-                if text:
-                    handle_command(chat_id, text)
+                if text and str(chat_id) == str(ALLOWED_CHAT):
+                    print(f"  [daily_manav] {text!r}")
+                    handle_daily_commands(DAILY_BOT_TOKEN, chat_id, text)
+                elif text:
+                    print(f"  [WARN] daily_manav — unauthorised chat: {chat_id}")
+
+            # Poll withdrawal bot — Manav
+            for update in tg_get_updates(WITHDRAW_BOT_TOKEN, withdraw_offset):
+                withdraw_offset = update["update_id"] + 1
+                msg     = update.get("message", {})
+                text    = msg.get("text", "")
+                chat_id = str(msg.get("chat", {}).get("id", ""))
+                if text and str(chat_id) == str(ALLOWED_CHAT):
+                    print(f"  [withdraw_manav] {text!r}")
+                    handle_all_commands(WITHDRAW_BOT_TOKEN, chat_id, text)
+                elif text:
+                    print(f"  [WARN] withdraw_manav — unauthorised chat: {chat_id}")
+
+            # Poll Vasu bot — all commands
+            for update in tg_get_updates(VASU_BOT_TOKEN, vasu_offset):
+                vasu_offset = update["update_id"] + 1
+                msg     = update.get("message", {})
+                text    = msg.get("text", "")
+                chat_id = str(msg.get("chat", {}).get("id", ""))
+                if text and str(chat_id) == str(ALLOWED_CHAT_VASU):
+                    print(f"  [vasu_bot] {text!r}")
+                    handle_all_commands(VASU_BOT_TOKEN, chat_id, text)
+                elif text:
+                    print(f"  [WARN] vasu_bot — unauthorised chat: {chat_id}")
+
         except KeyboardInterrupt:
             print("\n  Shutting down.")
-            tg_send(ALLOWED_CHAT, "🔴 *RM Trigger Bot stopped.*")
+            tg_send(DAILY_BOT_TOKEN,       ALLOWED_CHAT, "🔴 *RM Trigger Bot stopped.*")
+            tg_send(WITHDRAW_BOT_TOKEN,    ALLOWED_CHAT, "🔴 *RM Trigger Bot stopped.*")
+            tg_send(VASU_BOT_TOKEN,        ALLOWED_CHAT_VASU, "🔴 *RM Trigger Bot stopped.*")
             break
         except Exception as e:
-            print(f"[ERROR] Main loop: {e}")
+            print(f"[ERROR] {e}")
             time.sleep(5)
 
 

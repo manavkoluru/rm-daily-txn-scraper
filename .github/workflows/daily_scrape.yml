@@ -21,12 +21,12 @@ on:
         default: ''
         type: string
       group:
-        description: 'Group name for withdrawal: manav | ranjitha | pavana | poornima | others'
+        description: 'Group name for withdrawal: manav | ranjitha | pavana | poornima | others | vasu'
         required: false
         default: ''
         type: string
       bot:
-        description: 'Group name for scraper: manav | ranjitha | pavana | poornima | others'
+        description: 'Group name for scraper: manav | ranjitha | pavana | poornima | others | vasu'
         required: false
         default: ''
         type: string
@@ -35,16 +35,18 @@ on:
 env:
   RM_PASSWORD:                  ${{ secrets.RM_PASSWORD }}
   TELEGRAM_BOT_TOKEN_RANJITHA:  ${{ secrets.TELEGRAM_BOT_TOKEN_RANJITHA }}
-  TELEGRAM_CHAT_ID_RANJITHA:    ${{ secrets.TELEGRAM_CHAT_ID_RANJITHA }}
+  TELEGRAM_CHAT_ID_RANJITHA:    ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
   TELEGRAM_BOT_TOKEN_POORNIMA:  ${{ secrets.TELEGRAM_BOT_TOKEN_POORNIMA }}
-  TELEGRAM_CHAT_ID_POORNIMA:    ${{ secrets.TELEGRAM_CHAT_ID_POORNIMA }}
+  TELEGRAM_CHAT_ID_POORNIMA:    ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
   TELEGRAM_BOT_TOKEN_PAVANA:    ${{ secrets.TELEGRAM_BOT_TOKEN_PAVANA }}
   TELEGRAM_CHAT_ID_PAVANA:      ${{ secrets.TELEGRAM_CHAT_ID_PAVANA }}
   TELEGRAM_BOT_TOKEN_MANAV:          ${{ secrets.TELEGRAM_BOT_TOKEN_MANAV }}
   TELEGRAM_CHAT_ID_MANAV:            ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
   TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV: ${{ secrets.TELEGRAM_BOT_TOKEN_WITHDRAW_MANAV }}
   TELEGRAM_BOT_TOKEN_OTHERS:    ${{ secrets.TELEGRAM_BOT_TOKEN_OTHERS }}
-  TELEGRAM_CHAT_ID_OTHERS:      ${{ secrets.TELEGRAM_CHAT_ID_OTHERS }}
+  TELEGRAM_CHAT_ID_OTHERS:      ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
+  TELEGRAM_BOT_TOKEN_VASU:      ${{ secrets.TELEGRAM_BOT_TOKEN_VASU }}
+  TELEGRAM_CHAT_ID_VASU:        ${{ secrets.TELEGRAM_CHAT_ID_VASU }}
 
 jobs:
   # ── Daily scraper (runs every day) ─────────────────────────────────────────
