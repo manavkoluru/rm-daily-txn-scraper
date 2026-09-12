@@ -47,6 +47,8 @@ env:
   TELEGRAM_CHAT_ID_OTHERS:      ${{ secrets.TELEGRAM_CHAT_ID_MANAV }}
   TELEGRAM_BOT_TOKEN_VASU:      ${{ secrets.TELEGRAM_BOT_TOKEN_VASU }}
   TELEGRAM_CHAT_ID_VASU:        ${{ secrets.TELEGRAM_CHAT_ID_VASU }}
+  TELEGRAM_BOT_TOKEN_MANJULA:    ${{ secrets.TELEGRAM_BOT_TOKEN_MANJULA || secrets.TELEGRAM_BOT_TOKEN_MANAV }}
+  TELEGRAM_CHAT_ID_MANJULA:      ${{ secrets.TELEGRAM_CHAT_ID_MANJULA || secrets.TELEGRAM_CHAT_ID_MANAV }}
 
 jobs:
   # ── Daily scraper (runs every day) ─────────────────────────────────────────

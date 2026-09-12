@@ -27,6 +27,10 @@
     "token_env": "TELEGRAM_BOT_TOKEN_VASU",
     "chat_id_env": "TELEGRAM_CHAT_ID_VASU"
   },
+  "rm_daily_txns_manjula_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_MANJULA",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANJULA"
+  },
   "rm_weekly_withdraw_vasu_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_VASU",
     "chat_id_env": "TELEGRAM_CHAT_ID_VASU"

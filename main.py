@@ -101,8 +101,31 @@ def get_accounts(bot_user_mapping: dict) -> list[str]:
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
+def chunk_message(message: str, max_length: int = 4096) -> list[str]:
+    """Splits a message into chunks at \n\n boundaries to respect Telegram's character limit."""
+    if len(message) <= max_length:
+        return [message]
+
+    chunks = []
+    current_chunk = ""
+
+    for paragraph in message.split("\n\n"):
+        if len(current_chunk) + len(paragraph) + 2 <= max_length:
+            current_chunk += paragraph + "\n\n"
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.rstrip("\n"))
+            current_chunk = paragraph + "\n\n"
+
+    if current_chunk:
+        chunks.append(current_chunk.rstrip("\n"))
+
+    return chunks if chunks else [message]
+
+
 def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
-    """Sends *message* via the named bot using its env-var credentials."""
+    """Sends *message* via the named bot using its env-var credentials.
+    Automatically chunks messages to respect Telegram's 4096 character limit."""
     cfg = bot_config.get(bot_name)
     if not cfg:
         print(f"[WARN] No config for bot '{bot_name}'. Skipping.")
@@ -126,13 +149,18 @@ def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
         return
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    payload = {"chat_id": chat_id, "text": message, "parse_mode": "Markdown"}
-    try:
-        res = requests.post(url, json=payload, timeout=10)
-        res.raise_for_status()
-        print(f"[OK] Sent to {bot_name}")
-    except Exception as e:
-        print(f"[ERROR] Failed to send to {bot_name}: {e}")
+
+    # Split into chunks if needed
+    chunks = chunk_message(message)
+    for i, chunk in enumerate(chunks):
+        chunk_info = f" (part {i+1}/{len(chunks)})" if len(chunks) > 1 else ""
+        payload = {"chat_id": chat_id, "text": chunk, "parse_mode": "Markdown"}
+        try:
+            res = requests.post(url, json=payload, timeout=10)
+            res.raise_for_status()
+            print(f"[OK] Sent to {bot_name}{chunk_info}")
+        except Exception as e:
+            print(f"[ERROR] Failed to send to {bot_name}{chunk_info}: {e}")
 
 
 # ── Scraping ──────────────────────────────────────────────────────────────────
@@ -234,6 +262,8 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
 
     Active Investment: no tax (94 or 100 INR/USD)
     E-Wallet / Remaining / Recent Credit: after 7% tax (91 or 97 INR/USD)
+
+    Includes TOPUP alert if remaining balance < 15 days of daily credit.
     """
     label = f"{display_name} ({username})" if display_name else username
     rate_tag = "@91rs" if is_91 else "@97rs"
@@ -251,6 +281,14 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
     if "remaining" in data:
         v = data["remaining"]
         lines.append(f"  • *Remaining:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
+
+        # Check if remaining is below 15 days threshold
+        if "recent_credit_amount" in data and data["recent_credit_amount"] > 0:
+            daily_credit = data["recent_credit_amount"]
+            days_remaining = v / daily_credit
+            if days_remaining < 15:
+                lines.append(f"  ⚠️  *TOPUP NEEDED* — Remaining covers only ~{int(days_remaining)} days at ${daily_credit:,.2f}/day")
+
     if "recent_credit_amount" in data:
         v = data["recent_credit_amount"]
         date_str = data.get("recent_credit_date", "")
@@ -339,10 +377,10 @@ def main(only_bot: str = None):
         )
 
         message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines) + summary_footer
-        send_to_bot(bot_name, bot_config, message)
 
-        # Also send to vasu and others bot if this is vasu's group
-        if bot_name == "rm_daily_txns_vasu_bot":
+        # Send to group's own bot and also to others bot
+        send_to_bot(bot_name, bot_config, message)
+        if bot_name != "rm_daily_txns_others_bot":
             send_to_bot("rm_daily_txns_others_bot", bot_config, message)
 
 

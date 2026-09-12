@@ -40,7 +40,8 @@ WALLET_ADDRESS      = "0x6E8fD80B07BE01FD47bf3b2d47B8048e65c4A698"
 LOGIN_URL           = os.getenv("RM_LOGIN_URL", "https://app.richmakers.space")
 WITHDRAWAL_URL      = "https://app.richmakers.space/member/71363674754d5373/71376131744d4f716d7136586e77253344253344"
 SHARED_PASSWORD     = os.getenv("RM_PASSWORD", "")
-MIN_WITHDRAWAL_USD  = 10   # skip if floor(balance) < this
+MIN_WITHDRAWAL_USD  = 10    # skip if floor(balance) < this
+MAX_WITHDRAWAL_USD  = 1000  # cap single withdrawal at this amount
 
 _BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -82,6 +83,28 @@ def get_all_accounts(mapping: dict) -> list[str]:
 
 # ── Telegram ──────────────────────────────────────────────────────────────────
 
+def chunk_message(message: str, max_length: int = 4096) -> list[str]:
+    """Splits a message into chunks at \n\n boundaries to respect Telegram's character limit."""
+    if len(message) <= max_length:
+        return [message]
+
+    chunks = []
+    current_chunk = ""
+
+    for paragraph in message.split("\n\n"):
+        if len(current_chunk) + len(paragraph) + 2 <= max_length:
+            current_chunk += paragraph + "\n\n"
+        else:
+            if current_chunk:
+                chunks.append(current_chunk.rstrip("\n"))
+            current_chunk = paragraph + "\n\n"
+
+    if current_chunk:
+        chunks.append(current_chunk.rstrip("\n"))
+
+    return chunks if chunks else [message]
+
+
 def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
     cfg = bot_config.get(bot_name)
     if not cfg:
@@ -95,16 +118,21 @@ def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
             print(f"  [ERROR] No credentials for others_bot — cannot deliver message")
         return
     url = f"https://api.telegram.org/bot{token}/sendMessage"
-    try:
-        res = requests.post(
-            url,
-            json={"chat_id": chat_id, "text": message, "parse_mode": "Markdown"},
-            timeout=10,
-        )
-        res.raise_for_status()
-        print(f"  [OK] Telegram → {bot_name}")
-    except Exception as e:
-        print(f"  [ERROR] Telegram {bot_name}: {e}")
+
+    # Split into chunks if needed
+    chunks = chunk_message(message)
+    for i, chunk in enumerate(chunks):
+        chunk_info = f" (part {i+1}/{len(chunks)})" if len(chunks) > 1 else ""
+        try:
+            res = requests.post(
+                url,
+                json={"chat_id": chat_id, "text": chunk, "parse_mode": "Markdown"},
+                timeout=10,
+            )
+            res.raise_for_status()
+            print(f"  [OK] Telegram → {bot_name}{chunk_info}")
+        except Exception as e:
+            print(f"  [ERROR] Telegram {bot_name}{chunk_info}: {e}")
 
 
 # ── Browser helpers ───────────────────────────────────────────────────────────
@@ -229,6 +257,8 @@ def do_withdrawal(page, username: str, dry_run: bool = False) -> dict:
 
     result["balance"] = balance
     amount = math.floor(balance)
+    # Cap at MAX_WITHDRAWAL_USD ($1000)
+    amount = min(amount, MAX_WITHDRAWAL_USD)
     print(f"Balance ${balance:.2f}  │  ", end="", flush=True)
 
     # ── Step 5: Threshold check ───────────────────────────────────────────────
@@ -259,56 +289,94 @@ def do_withdrawal(page, username: str, dry_run: bool = False) -> dict:
         return result
 
     # ── Step 7: Submit ────────────────────────────────────────────────────────
-    try:
-        print(f"Submitting ${amount}... ", end="", flush=True)
-        page.click("button:has-text('Submit')", timeout=10_000)
-        time.sleep(3)
+    retry_count = 0
+    max_retries = 5
 
-        post_alerts = read_ui_alerts(page)
-        page_text   = page.inner_text("body")
-        result["ui_msg"] = post_alerts or ""
+    while retry_count <= max_retries:
+        try:
+            print(f"Submitting ${amount}... ", end="", flush=True)
+            page.click("button:has-text('Submit')", timeout=10_000)
+            time.sleep(3)
 
-        # Classify result by site message
-        combined = (post_alerts + " " + page_text).lower()
+            post_alerts = read_ui_alerts(page)
+            page_text   = page.inner_text("body")
+            result["ui_msg"] = post_alerts or ""
 
-        if any(kw in combined for kw in ["success", "submitted", "request has been", "withdrawal request"]):
-            result["status"] = "success"
-            result["reason"] = f"Withdrew ${amount}"
-            print(f"✅  {post_alerts or 'Success'}")
+            # Classify result by site message
+            combined = (post_alerts + " " + page_text).lower()
 
-        elif "allowed only between" in combined or "not allowed" in combined:
-            result["status"]       = "skipped"
-            result["reason"]       = "Outside withdrawal window (rejected after submit)"
-            result["time_blocked"] = True
-            print(f"⏭  {post_alerts}")
+            if any(kw in combined for kw in ["success", "submitted", "request has been", "withdrawal request"]):
+                result["status"] = "success"
+                result["reason"] = f"Withdrew ${amount}"
+                print(f"✅  {post_alerts or 'Success'}")
+                return result
 
-        elif any(kw in combined for kw in ["insufficient", "pending", "already", "invalid", "error", "failed"]):
-            result["status"] = "error"
-            result["reason"] = "Site rejected the request"
-            print(f"❌  {post_alerts or 'Unknown error'}")
+            elif "allowed only between" in combined or "not allowed" in combined:
+                result["status"]       = "skipped"
+                result["reason"]       = "Outside withdrawal window (rejected after submit)"
+                result["time_blocked"] = True
+                print(f"⏭  {post_alerts}")
+                return result
 
-        else:
-            # No recognisable signal — log raw alerts and flag as unknown
-            result["status"] = "error"
-            result["reason"] = "Unclear response after submit"
-            print(f"❓  {post_alerts or '(no alert text found)'}")
+            elif "low wallet balance" in combined or "low balance" in combined:
+                # Retry with reduced amount (balance - 1)
+                if amount > MIN_WITHDRAWAL_USD:
+                    amount -= 1
+                    retry_count += 1
+                    print(f"Retry with ${amount}... ", end="", flush=True)
+                    # Reload the form for retry
+                    page.reload()
+                    time.sleep(1)
+                    page.fill("input[placeholder='re-enter your withdrawal address']", WALLET_ADDRESS)
+                    page.fill("input[placeholder='Enter Amount']", str(amount))
+                    page.fill("input[placeholder='Enter Login Password']", SHARED_PASSWORD)
+                    continue
+                else:
+                    result["status"] = "error"
+                    result["reason"] = "Low wallet balance (could not retry)"
+                    print(f"❌  {post_alerts or 'Low balance'}")
+                    return result
 
-    except Exception as e:
-        result["reason"] = "Submit exception"
-        result["ui_msg"] = str(e)
-        print(f"❌  Exception: {e}")
+            elif any(kw in combined for kw in ["insufficient", "pending", "already", "invalid", "error", "failed"]):
+                result["status"] = "error"
+                result["reason"] = "Site rejected the request"
+                print(f"❌  {post_alerts or 'Unknown error'}")
+                return result
 
+            else:
+                # No recognisable signal — log raw alerts and flag as unknown
+                result["status"] = "error"
+                result["reason"] = "Unclear response after submit"
+                print(f"❓  {post_alerts or '(no alert text found)'}")
+                return result
+
+        except Exception as e:
+            result["reason"] = "Submit exception"
+            result["ui_msg"] = str(e)
+            print(f"❌  Exception: {e}")
+            return result
+
+    # Should not reach here, but return error if we do
     return result
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-KNOWN_GROUPS = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu"]
-
-
 def group_to_bot_key(group: str) -> str:
     """e.g. 'manav' → 'rm_daily_txns_manav_bot'"""
     return f"rm_daily_txns_{group.lower()}_bot"
+
+
+def derive_known_groups(bot_mapping: dict) -> list[str]:
+    """Dynamically derive group names from bot_mapping keys.
+    e.g. 'rm_daily_txns_manav_bot' → 'manav'
+    """
+    groups = []
+    for key in bot_mapping.keys():
+        if key.startswith("rm_daily_txns_") and key.endswith("_bot"):
+            group = key.replace("rm_daily_txns_", "").replace("_bot", "")
+            groups.append(group)
+    return sorted(groups)
 
 
 def main(only_account: str = None, only_group: str = None, dry_run: bool = False):
@@ -322,6 +390,7 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     mapping      = _load("user_bot_mapping.json")
     name_map     = _load("user_name_mapping.json")
     rate_91_set  = load_rate_91_set()
+    known_groups = derive_known_groups(mapping)
 
     with open(os.path.join(_BASE, "bot_config.json")) as f:
         bot_cfg = json.load(f)
@@ -330,7 +399,7 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     if only_group:
         bot_key = group_to_bot_key(only_group)
         if bot_key not in mapping:
-            print(f"Group '{only_group}' not found. Valid: {KNOWN_GROUPS}")
+            print(f"Group '{only_group}' not found. Valid: {known_groups}")
             return
         mapping = {bot_key: mapping[bot_key]}
 
@@ -439,9 +508,7 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
                 print(f"       Site msg: {r['ui_msg']}")
     print(f"{'═'*W}\n")
 
-    # ── Telegram — single withdrawal bot, grouped by user mapping ────────────
-    WITHDRAW_BOT = "rm_withdraw_saturday_manav_bot"
-
+    # ── Telegram — send per-group messages ────────────────────────────────────
     # Group name label from bot key, e.g. rm_daily_txns_manav_bot → Manav
     def group_label(bot_key: str) -> str:
         part = bot_key.replace("rm_daily_txns_", "").replace("_bot", "")
@@ -452,8 +519,13 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     for r in results:
         group_results[r["bot"]].append(r)
 
-    # Build one section per group
-    sections = []
+    # Send one message per group to their bot + others bot
+    tg_tag = "\\[DRY RUN\\] " if dry_run else ""
+    time_notice = (
+        f"\n\n🚫 *Withdrawal window closed*\n_{time_block_msg}_\n"
+        f"_Remaining accounts were skipped automatically._"
+    ) if time_block_msg else ""
+
     for group_bot, group_res in group_results.items():
         header = f"👥 *{group_label(group_bot)}*"
         account_lines = []
@@ -489,34 +561,28 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
         g_usd = sum(r["amount"] for r in group_res if r["status"] == "success")
         g_inr = sum(returns_inr(r["amount"], r["is_91"]) for r in group_res if r["status"] == "success")
         subtotal = f"\n  _Subtotal: ${g_usd:,} (₹{g_inr:,.2f})_" if g_usd else ""
-        sections.append(header + "\n" + "\n\n".join(account_lines) + subtotal)
 
-    tg_tag      = "\\[DRY RUN\\] " if dry_run else ""
-    time_notice = (
-        f"\n\n🚫 *Withdrawal window closed*\n_{time_block_msg}_\n"
-        f"_Remaining accounts were skipped automatically._"
-    ) if time_block_msg else ""
+        group_msg = (
+            f"💸 *{tg_tag}Weekly Withdrawal — {group_label(group_bot)}*\n"
+            f"_{datetime.now().strftime('%d %b %Y, %I:%M %p IST')}_\n\n"
+            + header + "\n" + "\n\n".join(account_lines) + subtotal
+            + time_notice
+        )
 
-    msg = (
-        f"💸 *{tg_tag}Weekly Withdrawal Summary*\n"
-        f"_{datetime.now().strftime('%d %b %Y, %I:%M %p IST')}_\n\n"
-        + "\n\n".join(sections)
-        + time_notice
-        + f"\n\n━━━━━━━━━━━━━━━━━━━━\n"
-        f"💵 *Total Withdrawn:* ${total_usd:,} (₹{total_inr:,.2f})\n"
-        f"✅ {len(success_list)}  ⏭ {len(skipped_list)}  ❌ {len(error_list)}"
-    )
-    send_to_bot(WITHDRAW_BOT, bot_cfg, msg)
-
-    # Also send to vasu and others bots
-    send_to_bot("rm_daily_txns_vasu_bot", bot_cfg, msg)
-    send_to_bot("rm_daily_txns_others_bot", bot_cfg, msg)
+        # Send to group's own bot and also to others bot
+        send_to_bot(group_bot, bot_cfg, group_msg)
+        if group_bot != "rm_daily_txns_others_bot":
+            send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
 
 
 if __name__ == "__main__":
+    # Load mapping to get valid groups
+    bot_mapping = _load("user_bot_mapping.json")
+    valid_groups = derive_known_groups(bot_mapping)
+
     parser = argparse.ArgumentParser(description="Automated weekly withdrawal — richmakers.space")
     parser.add_argument("--dry-run", action="store_true", help="Preview only, do not submit")
     parser.add_argument("--account", help="Single R-ID (e.g. R523341)")
-    parser.add_argument("--group",   help=f"Group name: {KNOWN_GROUPS}")
+    parser.add_argument("--group",   help=f"Group name: {' | '.join(valid_groups)}")
     args = parser.parse_args()
     main(only_account=args.account, only_group=args.group, dry_run=args.dry_run)
