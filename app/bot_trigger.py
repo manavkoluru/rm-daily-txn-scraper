@@ -41,7 +41,7 @@ WORKFLOW_FILE      = "daily_scrape.yml"
 BRANCH             = "main"
 
 GITHUB_API    = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
-KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu"]
+KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula"]
 
 # ── Help texts ────────────────────────────────────────────────────────────────
 
@@ -54,6 +54,7 @@ DAILY_HELP = """
 `/daily ranjitha`     — Ranjitha's accounts only
 `/daily pavana`       — Pavana's accounts only
 `/daily poornima`     — Poornima's accounts only
+`/daily manjula`     — Manjula's accounts only
 `/daily others`       — Others' accounts only
 
 *ℹ️ Info:*
@@ -70,6 +71,7 @@ WITHDRAW_HELP = """
 `/daily ranjitha`     — Ranjitha's accounts only
 `/daily pavana`       — Pavana's accounts only
 `/daily poornima`     — Poornima's accounts only
+`/daily manjula`     — Manjula's accounts only
 `/daily others`       — Others' accounts only
 
 *💸 Withdrawals:*
@@ -79,6 +81,7 @@ WITHDRAW_HELP = """
 `/withdraw pavana`    — Pavana's accounts
 `/withdraw poornima`  — Poornima's accounts
 `/withdraw others`    — Others' accounts
+`/withdraw manjula`     — Manjula's accounts
 `/withdraw R553232`   — Single account by R\\-ID
 
 *ℹ️ Info:*

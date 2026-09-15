@@ -21,12 +21,12 @@ on:
         default: ''
         type: string
       group:
-        description: 'Group name for withdrawal: manav | ranjitha | pavana | poornima | others | vasu'
+        description: 'Group name for withdrawal: manav | ranjitha | pavana | poornima | others | vasu | manjula'
         required: false
         default: ''
         type: string
       bot:
-        description: 'Group name for scraper: manav | ranjitha | pavana | poornima | others | vasu'
+        description: 'Group name for scraper: manav | ranjitha | pavana | poornima | others | vasu | manjula'
         required: false
         default: ''
         type: string
