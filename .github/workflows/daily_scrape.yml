@@ -1,4 +1,4 @@
-Name: Daily Scraper & Weekly Withdrawal
+name: Daily Scraper & Weekly Withdrawal
 
 on:
   schedule:
