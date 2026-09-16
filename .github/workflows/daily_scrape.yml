@@ -2,9 +2,9 @@ name: Daily Scraper & Weekly Withdrawal
 
 on:
   schedule:
-    - cron: '0 8 * * *'    # Every day at exactly 8:00 AM IST
+    - cron: '0 10 * * *'    # Every day at exactly 10:00 AM IST
       timezone: 'Asia/Kolkata'
-    - cron: '30 8 * * 6'   # Every Saturday at exactly 8:30 AM IST
+    - cron: '00 8 * * 6'   # Every Saturday at exactly 8:00 AM IST
       timezone: 'Asia/Kolkata'
 
   workflow_dispatch:
@@ -59,7 +59,7 @@ jobs:
     name: Daily Account Scraper
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '0 8 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '0 10 * * *')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'scraper' || github.event.inputs.job == 'both'))
     steps:
       - uses: actions/checkout@v4
@@ -89,7 +89,7 @@ jobs:
     name: Weekly Withdrawal
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 8 * * 6')
+      (github.event_name == 'schedule' && github.event.schedule == '00 8 * * 6')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdrawal' || github.event.inputs.job == 'both'))
     steps:
       - uses: actions/checkout@v4
