@@ -1,9 +1,9 @@
-name: Daily Scraper & Weekly Withdrawal
+Name: Daily Scraper & Weekly Withdrawal
 
 on:
   schedule:
     - cron: '30 2 * * *'  # Every day   08:00 IST (02:30 UTC) — scraper
-    - cron: '30 2 * * 6'  # Every Sat   08:00 IST (02:30 UTC) — withdrawal
+    - cron: '0 3 * * 6'   # Every Sat   08:30 IST (03:00 UTC) — withdrawal
   workflow_dispatch:       # Manual trigger — GitHub UI or Telegram bot
     inputs:
       job:
@@ -56,7 +56,7 @@ jobs:
     name: Daily Account Scraper
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'schedule' && github.event.schedule == '30 2 * * *'
+      (github.event_name == 'schedule' && github.event.schedule == '30 2 * * *')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'scraper' || github.event.inputs.job == 'both'))
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
     name: Weekly Withdrawal
     runs-on: ubuntu-latest
     if: |
-      github.event_name == 'schedule' && github.event.schedule == '30 2 * * 6'
+      (github.event_name == 'schedule' && github.event.schedule == '0 3 * * 6')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdrawal' || github.event.inputs.job == 'both'))
     steps:
       - uses: actions/checkout@v4
