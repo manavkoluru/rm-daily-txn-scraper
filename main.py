@@ -18,6 +18,7 @@ DASHBOARD_URL = os.getenv(
     "RM_DASHBOARD_URL",
     "https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344",
 )
+PERSONAL_INFO_URL = "https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344"
 
 # Shared password for all accounts (set as repo secret RM_PASSWORD)
 SHARED_PASSWORD = os.getenv("RM_PASSWORD", "")
@@ -221,12 +222,13 @@ def parse_dashboard_html(html_content: str) -> dict:
                 key = label.lower().replace(" ", "_").rstrip("_")
                 details[key] = amount
 
-    # 6. Most recent Credit transaction (E-wallet only)
+    # 6. Most recent Credit transaction (E-wallet only) & last 3 credits for flushout check
     txn_table = soup.find("h5", string=re.compile("Recent Transaction"))
     if txn_table:
         table = txn_table.find_parent("div", class_="card-body")
         if table:
             rows = table.find_all("tr")
+            credit_entries = []
             for row in rows:
                 cells = row.find_all("td")
                 if len(cells) < 4:
@@ -238,10 +240,15 @@ def parse_dashboard_html(html_content: str) -> dict:
                 if "E-wallet" in wallet_badge.get_text() and "Credit" in mode_badge.get_text():
                     amt_match = re.search(r"\$\s*([\d,]+\.?\d*)", cells[3].get_text())
                     if amt_match:
-                        details["recent_credit_amount"] = float(amt_match.group(1).replace(",", ""))
-                        # Keep only the date portion: "07-Sep-2026 12:00 AM" → "07-Sep-2026"
-                        details["recent_credit_date"] = cells[0].get_text(strip=True).split(" ")[0]
-                    break  # only the most recent
+                        amount = float(amt_match.group(1).replace(",", ""))
+                        date_str = cells[0].get_text(strip=True).split(" ")[0]
+                        credit_entries.append({"amount": amount, "date": date_str})
+                        if len(credit_entries) >= 3:
+                            break
+            if credit_entries:
+                details["recent_credit_amount"] = credit_entries[0]["amount"]
+                details["recent_credit_date"] = credit_entries[0]["date"]
+                details["credit_history"] = [e["amount"] for e in credit_entries]
 
     return details
 
@@ -255,6 +262,36 @@ def fetch_data_for_account(page, username: str) -> dict:
     page.wait_for_url(DASHBOARD_URL)
 #     page.wait_for_selector(".user-name")
     return parse_dashboard_html(page.content())
+
+
+def fetch_account_name(page) -> str:
+    """Fetches account name from Personal Information section."""
+    try:
+        page.goto(PERSONAL_INFO_URL)
+        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+        html = page.content()
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Look for "Your Personal Information" section and "Your Name" attribute
+        sections = soup.find_all(["div", "section"])
+        for section in sections:
+            section_text = section.get_text().lower()
+            if "your personal information" in section_text:
+                # Find "Your Name" in this section
+                rows = section.find_all(["tr", "div"])
+                for row in rows:
+                    row_text = row.get_text()
+                    if "your name" in row_text.lower():
+                        # Extract name from the next element or same row
+                        cells = row.find_all(["td", "span", "p"])
+                        for cell in cells:
+                            cell_text = cell.get_text(strip=True)
+                            if cell_text and "your name" not in cell_text.lower():
+                                return cell_text
+        return ""
+    except Exception as e:
+        print(f"[WARN] Could not fetch account name: {e}")
+        return ""
 
 
 def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False) -> str:
@@ -275,6 +312,9 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
     if "active_investment" in data:
         v = data["active_investment"]
         lines.append(f"  • *Active Inv:* ${v:,.2f} {inr_bracket(investment_inr(v, is_91))}")
+    if "total_rewards" in data:
+        v = data["total_rewards"]
+        lines.append(f"  • *Total Rewards:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
     if "e_wallet_balance" in data:
         v = data["e_wallet_balance"]
         lines.append(f"  • *E-Wallet:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
@@ -298,7 +338,7 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main(only_bot: str = None):
+def main(only_bot: str = None, exclude_manjula: bool = False):
     if not PLAYWRIGHT_AVAILABLE:
         print("Error: playwright is not installed. Run: pip install playwright && playwright install chromium")
         return
@@ -311,7 +351,11 @@ def main(only_bot: str = None):
     bot_user_mapping = load_user_bot_mapping()
     name_mapping = load_user_name_mapping()
     rate_91_set = load_user_rate_mapping()
+
+    # Filter by bot and optionally exclude manjula
     filtered_mapping = {k: v for k, v in bot_user_mapping.items() if not only_bot or k == only_bot}
+    if exclude_manjula:
+        filtered_mapping = {k: v for k, v in filtered_mapping.items() if k != "rm_daily_txns_manjula_bot"}
     usernames = get_accounts(filtered_mapping)
 
     if not usernames:
@@ -328,13 +372,18 @@ def main(only_bot: str = None):
         for username in usernames:
             context = browser.new_context()
             page = context.new_page()
-            display_name = name_mapping.get(username, "")
             is_91 = username in rate_91_set
             try:
+                # Fetch account name from website (fallback to mapping if not available)
+                display_name = fetch_account_name(page)
+                if not display_name:
+                    display_name = name_mapping.get(username, "")
+
                 data = fetch_data_for_account(page, username)
                 scraped_data[username] = data
                 scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91)}"
             except Exception as e:
+                display_name = name_mapping.get(username, "")
                 label = f"{display_name} ({username})" if display_name else username
                 scraped_data[username] = {}
                 scraped_text[username] = f"❌ *{label}*: Failed (`{str(e)}`)"
@@ -388,5 +437,6 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("--bot", help="Run only this bot (e.g. rm_daily_txns_pavana_bot)")
+    parser.add_argument("--exclude-manjula", action="store_true", help="Exclude manjula group from daily report")
     args = parser.parse_args()
-    main(only_bot=args.bot)
+    main(only_bot=args.bot, exclude_manjula=args.exclude_manjula)
