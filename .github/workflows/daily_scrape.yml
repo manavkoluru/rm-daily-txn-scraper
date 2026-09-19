@@ -1,10 +1,18 @@
-name: Daily Scraper & Weekly Withdrawal
+name: Daily Scraper, Weekly Withdrawal, Flushout & Rich Status Checks
 
 on:
   schedule:
-    - cron: '30 02 * * *'    
+    # Daily Scraper - Every day at 02:30 IST (21:00 UTC)
+    - cron: '30 02 * * *'
       timezone: 'Asia/Kolkata'
-    - cron: '00 8 * * 6'  
+    # Flushout Check - Every day at 03:00 IST (21:30 UTC) - right after daily scraper
+    - cron: '00 03 * * *'
+      timezone: 'Asia/Kolkata'
+    # Rich Status Check - Every day at 03:30 IST (22:00 UTC) - after flushout check
+    - cron: '30 03 * * *'
+      timezone: 'Asia/Kolkata'
+    # Weekly Withdrawal - Every Saturday at 08:00 IST
+    - cron: '00 8 * * 6'
       timezone: 'Asia/Kolkata'
 
   workflow_dispatch:
@@ -17,19 +25,12 @@ on:
         options:
           - scraper
           - withdrawal
-          - both
-      account:
-        description: 'Single account R-ID for withdrawal (e.g. R553232). Leave empty for all.'
-        required: false
-        default: ''
-        type: string
-      group:
-        description: 'Group name for withdrawal: manav | ranjitha | pavana | poornima | others | vasu | manjula'
-        required: false
-        default: ''
-        type: string
-      bot:
-        description: 'Group name for scraper: manav | ranjitha | pavana | poornima | others | vasu | manjula'
+          - flushout_check
+          - rich_status_check
+          - withdraw_history
+          - all
+      input:
+        description: 'Group name (manav|ranjitha|pavana|poornima|vasu|manjula|all), Account ID (R553232), or leave empty for defaults'
         required: false
         default: ''
         type: string
@@ -60,7 +61,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '30 02 * * *')
-      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'scraper' || github.event.inputs.job == 'both'))
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'scraper' || github.event.inputs.job == 'all'))
     steps:
       - uses: actions/checkout@v4
 
@@ -77,11 +78,17 @@ jobs:
 
       - name: Run scraper
         run: |
-          BOT="${{ github.event.inputs.bot }}"
-          if [ -n "$BOT" ]; then
-            python main.py --bot "rm_daily_txns_${BOT}_bot"
-          else
+          INPUT="${{ github.event.inputs.input }}"
+
+          if [ -z "$INPUT" ]; then
+            # Empty - run all groups including manjula
             python main.py
+          elif [ "$INPUT" = "all" ]; then
+            # "all" keyword - exclude manjula
+            python main.py --exclude-manjula
+          else
+            # Scraper uses --bot with group name
+            python main.py --bot "rm_daily_txns_${INPUT}_bot"
           fi
 
   # ── Weekly withdrawal (runs every Saturday) ─────────────────────────────────
@@ -90,7 +97,7 @@ jobs:
     runs-on: ubuntu-latest
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '00 8 * * 6')
-      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdrawal' || github.event.inputs.job == 'both'))
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdrawal' || github.event.inputs.job == 'all'))
     steps:
       - uses: actions/checkout@v4
 
@@ -107,10 +114,134 @@ jobs:
 
       - name: Run withdrawal
         run: |
+          INPUT="${{ github.event.inputs.input }}"
           ARGS=""
-          if [ -n "${{ github.event.inputs.account }}" ]; then
-            ARGS="--account ${{ github.event.inputs.account }}"
-          elif [ -n "${{ github.event.inputs.group }}" ]; then
-            ARGS="--group ${{ github.event.inputs.group }}"
+
+          if [ -z "$INPUT" ]; then
+            # Empty - run all groups including manjula
+            python withdraw.py
+          elif [ "$INPUT" = "all" ]; then
+            # "all" keyword - exclude manjula
+            python withdraw.py --group all
+          elif [[ "$INPUT" =~ ^R[0-9] ]]; then
+            # Account ID (starts with R followed by digit)
+            python withdraw.py --account $INPUT
+          else
+            # Group name
+            python withdraw.py --group $INPUT
           fi
-          python withdraw.py $ARGS
+
+  # ── Flushout Check (runs every day) ────────────────────────────────────────────
+  run-flushout-check:
+    name: Flushout Check
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '00 03 * * *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'flushout_check' || github.event.inputs.job == 'all'))
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run flushout check
+        run: |
+          INPUT="${{ github.event.inputs.input }}"
+          ARGS=""
+
+          if [ -z "$INPUT" ]; then
+            # Empty - run all groups including manjula
+            python flushout_check.py
+          elif [ "$INPUT" = "all" ]; then
+            # "all" keyword - exclude manjula
+            python flushout_check.py --group all
+          elif [[ "$INPUT" =~ ^R[0-9] ]]; then
+            # Account ID (starts with R followed by digit)
+            python flushout_check.py --account $INPUT
+          else
+            # Group name
+            python flushout_check.py --group $INPUT
+          fi
+
+  # ── Rich Status Check (runs every day) ────────────────────────────────────────
+  run-rich-status-check:
+    name: Rich Status Check
+    runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '30 03 * * *')
+      || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'rich_status_check' || github.event.inputs.job == 'all'))
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run rich status check
+        run: |
+          INPUT="${{ github.event.inputs.input }}"
+          ARGS=""
+
+          if [ -z "$INPUT" ]; then
+            # Empty - run all groups including manjula
+            python rich_status_check.py
+          elif [ "$INPUT" = "all" ]; then
+            # "all" keyword - exclude manjula
+            python rich_status_check.py --group all
+          elif [[ "$INPUT" =~ ^R[0-9] ]]; then
+            # Account ID (starts with R followed by digit)
+            python rich_status_check.py --account $INPUT
+          else
+            # Group name
+            python rich_status_check.py --group $INPUT
+          fi
+
+  # ── Withdrawal History (on-demand only) ────────────────────────────────────────
+  run-withdraw-history:
+    name: Withdrawal History
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdraw_history' || github.event.inputs.job == 'all')
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          python -m playwright install --with-deps chromium
+
+      - name: Run withdraw history
+        run: |
+          INPUT="${{ github.event.inputs.input }}"
+
+          if [ -z "$INPUT" ]; then
+            echo "❌ Account name or R-ID required for withdraw_history"
+            exit 1
+          elif [[ "$INPUT" =~ ^R[0-9] ]]; then
+            # Account ID
+            python withdraw_history.py $INPUT
+          else
+            # Account name
+            python withdraw_history.py $INPUT
+          fi

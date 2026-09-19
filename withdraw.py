@@ -39,6 +39,7 @@ except ImportError:
 WALLET_ADDRESS      = "0x6E8fD80B07BE01FD47bf3b2d47B8048e65c4A698"
 LOGIN_URL           = os.getenv("RM_LOGIN_URL", "https://app.richmakers.space")
 WITHDRAWAL_URL      = "https://app.richmakers.space/member/71363674754d5373/71376131744d4f716d7136586e77253344253344"
+PERSONAL_INFO_URL   = "https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344"
 SHARED_PASSWORD     = os.getenv("RM_PASSWORD", "")
 MIN_WITHDRAWAL_USD  = 10    # skip if floor(balance) < this
 MAX_WITHDRAWAL_USD  = 1000  # cap single withdrawal at this amount
@@ -146,6 +147,35 @@ def dismiss_modal(page) -> None:
         document.body.classList.remove('modal-open');
         document.body.style.overflow = '';
     """)
+
+
+def fetch_account_name(page) -> str:
+    """Fetches account name from Personal Information section."""
+    try:
+        page.goto(PERSONAL_INFO_URL)
+        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+        html = page.content()
+        soup = BeautifulSoup(html, "html.parser")
+
+        # Look for "Your Personal Information" section and "Your Name" attribute
+        sections = soup.find_all(["div", "section"])
+        for section in sections:
+            section_text = section.get_text().lower()
+            if "your personal information" in section_text:
+                # Find "Your Name" in this section
+                rows = section.find_all(["tr", "div"])
+                for row in rows:
+                    row_text = row.get_text()
+                    if "your name" in row_text.lower():
+                        # Extract name from the next element or same row
+                        cells = row.find_all(["td", "span", "p"])
+                        for cell in cells:
+                            cell_text = cell.get_text(strip=True)
+                            if cell_text and "your name" not in cell_text.lower():
+                                return cell_text
+        return ""
+    except Exception as e:
+        return ""
 
 
 def read_ui_alerts(page) -> str:
@@ -379,7 +409,7 @@ def derive_known_groups(bot_mapping: dict) -> list[str]:
     return sorted(groups)
 
 
-def main(only_account: str = None, only_group: str = None, dry_run: bool = False):
+def main(only_account: str = None, only_group: str = None, dry_run: bool = False, exclude_manjula: bool = False):
     if not PLAYWRIGHT_AVAILABLE:
         print("playwright not installed. Run: pip install playwright && playwright install chromium")
         return
@@ -395,13 +425,19 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     with open(os.path.join(_BASE, "bot_config.json")) as f:
         bot_cfg = json.load(f)
 
-    # Filter by group (e.g. --group manav)
-    if only_group:
+    # Handle special "all" group: all except manjula
+    if only_group == "all":
+        mapping = {k: v for k, v in mapping.items() if k != "rm_daily_txns_manjula_bot" and k != "rm_daily_txns_others_bot"}
+    elif only_group:
         bot_key = group_to_bot_key(only_group)
         if bot_key not in mapping:
             print(f"Group '{only_group}' not found. Valid: {known_groups}")
             return
         mapping = {bot_key: mapping[bot_key]}
+
+    # Optionally exclude manjula
+    if exclude_manjula:
+        mapping = {k: v for k, v in mapping.items() if k != "rm_daily_txns_manjula_bot"}
 
     all_accounts = get_all_accounts(mapping)
 
@@ -437,12 +473,11 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
 
         remaining = list(enumerate(all_accounts, 1))
         for i, username in remaining:
-            display = name_map.get(username, username)
-            label   = f"{display} ({username})"
             is_91   = username in rate_91_set
 
             # Already know we're outside the window — skip without logging in
             if time_block_msg:
+                display = name_map.get(username, username)
                 r = {
                     "status": "skipped", "amount": 0, "balance": 0.0,
                     "reason": "Skipped — withdrawal window closed",
@@ -453,11 +488,18 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
                 r["bot"]          = user_to_bot.get(username, "rm_daily_txns_others_bot")
                 r["is_91"]        = is_91
                 results.append(r)
+                label = f"{display} ({username})"
                 print(f"  [{i:02d}/{len(all_accounts):02d}] {label}  ⏭  Skipped (window closed)")
                 continue
 
             context = browser.new_context()
             page    = context.new_page()
+
+            # Fetch account name from website (fallback to mapping if not available)
+            display = fetch_account_name(page)
+            if not display:
+                display = name_map.get(username, username)
+            label   = f"{display} ({username})"
 
             print(f"  [{i:02d}/{len(all_accounts):02d}] {label}")
             print(f"         ", end="", flush=True)
@@ -569,9 +611,10 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
             + time_notice
         )
 
-        # Send to group's own bot and also to others bot
+        # Send to group's own bot
         send_to_bot(group_bot, bot_cfg, group_msg)
-        if group_bot != "rm_daily_txns_others_bot":
+        # Send to others bot ONLY if not manav or others bot
+        if group_bot != "rm_daily_txns_others_bot" and group_bot != "rm_daily_txns_manav_bot":
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
 
 
@@ -579,10 +622,12 @@ if __name__ == "__main__":
     # Load mapping to get valid groups
     bot_mapping = _load("user_bot_mapping.json")
     valid_groups = derive_known_groups(bot_mapping)
+    valid_groups.append("all")  # Add "all" as valid group
 
     parser = argparse.ArgumentParser(description="Automated weekly withdrawal — richmakers.space")
     parser.add_argument("--dry-run", action="store_true", help="Preview only, do not submit")
     parser.add_argument("--account", help="Single R-ID (e.g. R523341)")
     parser.add_argument("--group",   help=f"Group name: {' | '.join(valid_groups)}")
+    parser.add_argument("--exclude-manjula", action="store_true", help="Exclude manjula group")
     args = parser.parse_args()
-    main(only_account=args.account, only_group=args.group, dry_run=args.dry_run)
+    main(only_account=args.account, only_group=args.group, dry_run=args.dry_run, exclude_manjula=args.exclude_manjula)
