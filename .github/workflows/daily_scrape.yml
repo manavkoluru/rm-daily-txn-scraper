@@ -3,16 +3,16 @@ name: Daily Scraper, Weekly Withdrawal, Flushout & Rich Status Checks
 on:
   schedule:
     # Daily Scraper - Every day at 02:30 IST (21:00 UTC)
-    - cron: '30 02 * * *'
+    - cron: '00 04 * * *'
       timezone: 'Asia/Kolkata'
     # Flushout Check - Every day at 03:00 IST (21:30 UTC) - right after daily scraper
-    - cron: '00 03 * * *'
+    - cron: '00 04 * * *'
       timezone: 'Asia/Kolkata'
     # Rich Status Check - Every day at 03:30 IST (22:00 UTC) - after flushout check
-    - cron: '30 03 * * *'
+    - cron: '00 04 * * *'
       timezone: 'Asia/Kolkata'
     # Weekly Withdrawal - Every Saturday at 08:00 IST
-    - cron: '00 8 * * 6'
+    - cron: '00 04 * * 6'
       timezone: 'Asia/Kolkata'
 
   workflow_dispatch:
