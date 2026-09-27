@@ -60,7 +60,7 @@ jobs:
     name: Daily Account Scraper
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 02 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '00 04 * * *')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'scraper' || github.event.inputs.job == 'all'))
     steps:
       - uses: actions/checkout@v4
@@ -96,7 +96,7 @@ jobs:
     name: Weekly Withdrawal
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '00 8 * * 6')
+      (github.event_name == 'schedule' && github.event.schedule == '00 04 * * 6')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'withdrawal' || github.event.inputs.job == 'all'))
     steps:
       - uses: actions/checkout@v4
@@ -136,7 +136,7 @@ jobs:
     name: Flushout Check
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '00 03 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '00 04 * * *')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'flushout_check' || github.event.inputs.job == 'all'))
     steps:
       - uses: actions/checkout@v4
@@ -176,7 +176,7 @@ jobs:
     name: Rich Status Check
     runs-on: ubuntu-latest
     if: |
-      (github.event_name == 'schedule' && github.event.schedule == '30 03 * * *')
+      (github.event_name == 'schedule' && github.event.schedule == '00 04 * * *')
       || (github.event_name == 'workflow_dispatch' && (github.event.inputs.job == 'rich_status_check' || github.event.inputs.job == 'all'))
     steps:
       - uses: actions/checkout@v4
