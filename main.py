@@ -309,37 +309,47 @@ def fetch_activation_history(page) -> list[dict]:
 
         activations = []
 
+        # Look for "ACTIVATION HISTORY" heading on the page
+        has_activation_section = False
+        for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6", "div", "span"]):
+            if "ACTIVATION HISTORY" in heading.get_text().upper():
+                has_activation_section = True
+                break
+
         # Find tables on the page
         tables = soup.find_all("table")
 
         for table in tables:
             # Look for activation history table
-            table_text = table.get_text()
-
-            # Check header row for "ACTIVATION HISTORY" or similar
-            header_row = table.find("tr")
-            if not header_row:
-                continue
-
-            header_text = header_row.get_text().upper()
-            if "ACTIVATION" not in header_text and "HISTORY" not in header_text:
-                continue
-
             rows = table.find_all("tr")
+            if not rows:
+                continue
+
+            # Check if this table contains activation data (has Date and Amount columns)
+            header_row = rows[0]
+            header_text = header_row.get_text().upper()
+
+            # Check if this looks like an activation history table (case-insensitive)
+            has_date_col = "DATE" in header_text
+            has_amount_col = "AMOUNT" in header_text
+
+            if not (has_date_col and has_amount_col):
+                continue
 
             # Process data rows (skip header)
             for row_idx, row in enumerate(rows):
                 if row_idx == 0:  # Skip header row
                     continue
 
-                cells = row.find_all(["td"])
+                # Find cells (both td and th elements can appear in body rows)
+                cells = row.find_all(["td", "th"])
                 if len(cells) < 4:  # Need at least: #, Date, Package, Amount
                     continue
 
                 try:
                     # Extract date (column index 1) and amount (column index 3)
-                    date_cell = cells[1].get_text(strip=True)
-                    amount_cell = cells[3].get_text(strip=True)
+                    date_cell = cells[1].get_text(strip=True) if len(cells) > 1 else ""
+                    amount_cell = cells[3].get_text(strip=True) if len(cells) > 3 else ""
 
                     # Skip if either is empty
                     if not date_cell or not amount_cell:
@@ -359,7 +369,7 @@ def fetch_activation_history(page) -> list[dict]:
                             })
                         except ValueError:
                             continue
-                except (IndexError, AttributeError):
+                except (IndexError, AttributeError, ValueError):
                     continue
 
         # Sort by date (newest first) for better display
@@ -455,15 +465,17 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
         lines.append(f"  • *Rank:* {data['rank']}")
 
     # Show activation history breakdown instead of total active investment
-    if activation_history:
+    if activation_history is not None and len(activation_history) > 0:
+        # Show activation history breakdown
         activation_text = format_activation_history(activation_history)
         if activation_text:
             lines.append("")
             lines.append(activation_text)
-    elif "active_investment" in data:
-        # Fallback if no activation history available
-        v = data["active_investment"]
-        lines.append(f"  • *Active Inv:* ${v:,.2f}")
+    else:
+        # Fallback: show active investment from dashboard if no history available
+        if "active_investment" in data:
+            v = data["active_investment"]
+            lines.append(f"  • *Active Inv:* ${v:,.2f}")
     if "total_rewards" in data:
         v = data["total_rewards"]
         lines.append(f"  • *Total Rewards:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
