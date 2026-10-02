@@ -309,34 +309,61 @@ def fetch_activation_history(page) -> list[dict]:
 
         activations = []
 
-        # Find the table with "ACTIVATION HISTORY" header
+        # Find tables on the page
         tables = soup.find_all("table")
+
         for table in tables:
-            # Check if this table has activation history
-            table_text = table.get_text().upper()
-            if "ACTIVATION HISTORY" not in table_text and "HISTORY" not in table_text:
+            # Look for activation history table
+            table_text = table.get_text()
+
+            # Check header row for "ACTIVATION HISTORY" or similar
+            header_row = table.find("tr")
+            if not header_row:
+                continue
+
+            header_text = header_row.get_text().upper()
+            if "ACTIVATION" not in header_text and "HISTORY" not in header_text:
                 continue
 
             rows = table.find_all("tr")
-            # Skip header row
-            for row in rows[1:]:
-                cells = row.find_all(["td", "th"])
-                if len(cells) >= 4:  # #, Date, Package, Amount
-                    try:
-                        # Extract date (column 1) and amount (column 3)
-                        date_text = cells[1].get_text(strip=True)
-                        amount_text = cells[3].get_text(strip=True)
 
-                        # Parse amount (remove $, commas)
-                        amount_match = re.search(r"[\d,]+\.?\d*", amount_text.replace("$", ""))
-                        if amount_match and date_text:
-                            amount = float(amount_match.group(0).replace(",", ""))
+            # Process data rows (skip header)
+            for row_idx, row in enumerate(rows):
+                if row_idx == 0:  # Skip header row
+                    continue
+
+                cells = row.find_all(["td"])
+                if len(cells) < 4:  # Need at least: #, Date, Package, Amount
+                    continue
+
+                try:
+                    # Extract date (column index 1) and amount (column index 3)
+                    date_cell = cells[1].get_text(strip=True)
+                    amount_cell = cells[3].get_text(strip=True)
+
+                    # Skip if either is empty
+                    if not date_cell or not amount_cell:
+                        continue
+
+                    # Extract date part only (format: "08-Sep-2026 11:00 PM" → "08-Sep-2026")
+                    date_part = date_cell.split()[0] if date_cell else ""
+
+                    # Parse amount - extract number from text (e.g., "$ 1,000.00")
+                    amount_match = re.search(r"([\d,]+\.?\d*)", amount_cell.replace("$", "").strip())
+                    if amount_match and date_part:
+                        try:
+                            amount = float(amount_match.group(1).replace(",", ""))
                             activations.append({
-                                "date": date_text,
+                                "date": date_part,
                                 "amount": amount,
                             })
-                    except:
-                        continue
+                        except ValueError:
+                            continue
+                except (IndexError, AttributeError):
+                    continue
+
+        # Sort by date (newest first) for better display
+        activations.sort(key=lambda x: x.get("date", ""), reverse=True)
 
         return activations
     except Exception as e:
@@ -354,26 +381,45 @@ def format_activation_history(activations: list[dict]) -> str:
 
     today = datetime.now()
     lines = []
-    total_amount = sum(a["amount"] for a in activations)
+    total_amount = sum(a.get("amount", 0) for a in activations)
 
     lines.append(f"📊 *Active Investment:* ${total_amount:,.2f}")
     lines.append("")
 
     for activation in activations:
         try:
-            # Parse date (handles formats like "31-Mar-2026", "31 Mar 2026", etc.)
-            for fmt in ["%d-%b-%Y", "%d %b %Y", "%d/%m/%Y", "%d-%m-%Y"]:
-                try:
-                    act_date = datetime.strptime(activation["date"], fmt)
-                    break
-                except:
-                    continue
-            else:
-                # If date parsing fails, skip
+            date_str = activation.get("date", "").strip()
+            amount = activation.get("amount", 0)
+
+            if not date_str or amount <= 0:
                 continue
 
+            # Try multiple date formats
+            act_date = None
+            for fmt in ["%d-%b-%Y", "%d %b %Y", "%d/%m/%Y", "%d-%m-%Y", "%d.%m.%Y", "%Y-%m-%d"]:
+                try:
+                    act_date = datetime.strptime(date_str, fmt)
+                    break
+                except ValueError:
+                    continue
+
+            if not act_date:
+                # If still no match, try to be more flexible
+                # Extract any date-like pattern and try to parse
+                date_match = re.search(r"(\d{1,2})[/-](\w+)[/-](\d{4})", date_str)
+                if date_match:
+                    try:
+                        day, month_str, year = date_match.groups()
+                        # Try parsing with month name
+                        act_date = datetime.strptime(f"{day}-{month_str}-{year}", "%d-%b-%Y")
+                    except:
+                        continue
+                else:
+                    continue
+
             days_old = (today - act_date).days
-            amount = activation["amount"]
+            if days_old < 0:
+                days_old = 0  # In case of future dates
 
             # Determine status and indicator
             if days_old >= 200:
@@ -383,10 +429,10 @@ def format_activation_history(activations: list[dict]) -> str:
             else:
                 status = "✅ Commission active"
 
-            date_str = act_date.strftime("%d-%b-%Y")
-            lines.append(f"  • ${amount:,.2f} on {date_str} ({days_old} days old) {status}")
+            date_formatted = act_date.strftime("%d-%b-%Y")
+            lines.append(f"  • ${amount:,.2f} on {date_formatted} ({days_old} days old) {status}")
 
-        except Exception:
+        except Exception as e:
             continue
 
     return "\n".join(lines) if len(lines) > 1 else ""
