@@ -2,6 +2,7 @@ import json
 import os
 import re
 from collections import defaultdict
+from datetime import datetime, timedelta
 
 import requests
 from bs4 import BeautifulSoup
@@ -19,6 +20,7 @@ DASHBOARD_URL = os.getenv(
     "https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6e62756c736463253344",
 )
 PERSONAL_INFO_URL = "https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344"
+ACTIVATION_HISTORY_URL = "https://app.richmakers.space/member/6e4c797573632532425a6f4a77253344/6c62476c6e4d4362704a69646d41253344253344/68374b747367253344253344"
 
 # Shared password for all accounts (set as repo secret RM_PASSWORD)
 SHARED_PASSWORD = os.getenv("RM_PASSWORD", "")
@@ -294,11 +296,107 @@ def fetch_account_name(page) -> str:
         return ""
 
 
-def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False) -> str:
-    """Formats dashboard data into Markdown for Telegram with INR conversion.
+def fetch_activation_history(page) -> list[dict]:
+    """Fetches activation history from the Activation History page.
 
-    Active Investment: no tax (94 or 100 INR/USD)
+    Returns list of dicts: [{"date": "31-Mar-2026", "amount": 1000.0}, ...]
+    """
+    try:
+        page.goto(ACTIVATION_HISTORY_URL)
+        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+        html = page.content()
+        soup = BeautifulSoup(html, "html.parser")
+
+        activations = []
+
+        # Find the table with "ACTIVATION HISTORY" header
+        tables = soup.find_all("table")
+        for table in tables:
+            # Check if this table has activation history
+            table_text = table.get_text().upper()
+            if "ACTIVATION HISTORY" not in table_text and "HISTORY" not in table_text:
+                continue
+
+            rows = table.find_all("tr")
+            # Skip header row
+            for row in rows[1:]:
+                cells = row.find_all(["td", "th"])
+                if len(cells) >= 4:  # #, Date, Package, Amount
+                    try:
+                        # Extract date (column 1) and amount (column 3)
+                        date_text = cells[1].get_text(strip=True)
+                        amount_text = cells[3].get_text(strip=True)
+
+                        # Parse amount (remove $, commas)
+                        amount_match = re.search(r"[\d,]+\.?\d*", amount_text.replace("$", ""))
+                        if amount_match and date_text:
+                            amount = float(amount_match.group(0).replace(",", ""))
+                            activations.append({
+                                "date": date_text,
+                                "amount": amount,
+                            })
+                    except:
+                        continue
+
+        return activations
+    except Exception as e:
+        print(f"[WARN] Could not fetch activation history: {e}")
+        return []
+
+
+def format_activation_history(activations: list[dict]) -> str:
+    """Formats activation history with days old and commission status.
+
+    Returns formatted string or empty if no activations.
+    """
+    if not activations:
+        return ""
+
+    today = datetime.now()
+    lines = []
+    total_amount = sum(a["amount"] for a in activations)
+
+    lines.append(f"📊 *Active Investment:* ${total_amount:,.2f}")
+    lines.append("")
+
+    for activation in activations:
+        try:
+            # Parse date (handles formats like "31-Mar-2026", "31 Mar 2026", etc.)
+            for fmt in ["%d-%b-%Y", "%d %b %Y", "%d/%m/%Y", "%d-%m-%Y"]:
+                try:
+                    act_date = datetime.strptime(activation["date"], fmt)
+                    break
+                except:
+                    continue
+            else:
+                # If date parsing fails, skip
+                continue
+
+            days_old = (today - act_date).days
+            amount = activation["amount"]
+
+            # Determine status and indicator
+            if days_old >= 200:
+                status = "⛔ Commission stopped"
+            elif days_old >= 195:
+                status = "⚠️  Expiring soon (195+ days)"
+            else:
+                status = "✅ Commission active"
+
+            date_str = act_date.strftime("%d-%b-%Y")
+            lines.append(f"  • ${amount:,.2f} on {date_str} ({days_old} days old) {status}")
+
+        except Exception:
+            continue
+
+    return "\n".join(lines) if len(lines) > 1 else ""
+
+
+def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False, activation_history: list[dict] = None) -> str:
+    """Formats dashboard data into Markdown for Telegram.
+
     E-Wallet / Remaining / Recent Credit: after 7% tax (91 or 97 INR/USD)
+    Active Investment: shown as breakdown of topups with commission status
 
     Includes TOPUP alert if remaining balance < 15 days of daily credit.
     """
@@ -309,9 +407,17 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
         lines.append(f"  • *User ID:* `{data['user_id']}`")
     if "rank" in data:
         lines.append(f"  • *Rank:* {data['rank']}")
-    if "active_investment" in data:
+
+    # Show activation history breakdown instead of total active investment
+    if activation_history:
+        activation_text = format_activation_history(activation_history)
+        if activation_text:
+            lines.append("")
+            lines.append(activation_text)
+    elif "active_investment" in data:
+        # Fallback if no activation history available
         v = data["active_investment"]
-        lines.append(f"  • *Active Inv:* ${v:,.2f} {inr_bracket(investment_inr(v, is_91))}")
+        lines.append(f"  • *Active Inv:* ${v:,.2f}")
     if "total_rewards" in data:
         v = data["total_rewards"]
         lines.append(f"  • *Total Rewards:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))}")
@@ -380,8 +486,9 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
                     display_name = name_mapping.get(username, "")
 
                 data = fetch_data_for_account(page, username)
+                activation_history = fetch_activation_history(page)
                 scraped_data[username] = data
-                scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91)}"
+                scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91, activation_history)}"
             except Exception as e:
                 display_name = name_mapping.get(username, "")
                 label = f"{display_name} ({username})" if display_name else username
