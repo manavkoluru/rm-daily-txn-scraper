@@ -550,6 +550,32 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
                 print(f"       Site msg: {r['ui_msg']}")
     print(f"{'═'*W}\n")
 
+    # ── Detect accounts needing Sunday withdrawal ─────────────────────────────
+    # Sunday withdrawals: MIN = $50, MAX = $1000
+    # Only for accounts with remaining balance > $50 after Saturday withdrawal
+    pending_sunday = []
+    for r in success_list:
+        # For successful withdrawals, check if remaining balance > $50
+        remaining = r["balance"] - r["amount"]
+        if remaining > 50:  # Only schedule if remaining > $50
+            pending_sunday.append({
+                "username": r["username"],
+                "display_name": r["display_name"],
+                "remaining_balance": remaining,
+                "is_91": r["is_91"],
+                "bot": r["bot"],
+            })
+
+    # Save pending Sunday withdrawals to JSON
+    if pending_sunday:
+        pending_file = os.path.join(_BASE, "pending_sunday_withdrawals.json")
+        with open(pending_file, "w") as f:
+            json.dump(pending_sunday, f, indent=2)
+        print(f"  📅 Scheduled {len(pending_sunday)} account(s) for Sunday withdrawal:")
+        for acc in pending_sunday:
+            print(f"     • {acc['display_name']} ({acc['username']}) — ${acc['remaining_balance']:.2f} remaining")
+        print()
+
     # ── Telegram — send per-group messages ────────────────────────────────────
     # Group name label from bot key, e.g. rm_daily_txns_manav_bot → Manav
     def group_label(bot_key: str) -> str:
@@ -569,7 +595,9 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     ) if time_block_msg else ""
 
     for group_bot, group_res in group_results.items():
-        header = f"👥 *{group_label(group_bot)}*"
+        # Count successful withdrawals
+        success_count = len([r for r in group_res if r["status"] == "success"])
+        header = f"👥 *{group_label(group_bot)}* ({success_count} account{'s' if success_count != 1 else ''})"
         account_lines = []
         for r in group_res:
             icon = {"success": "✅", "skipped": "⏭", "error": "❌"}.get(r["status"], "❓")
@@ -613,8 +641,12 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
 
         # Send to group's own bot
         send_to_bot(group_bot, bot_cfg, group_msg)
-        # Send to others bot ONLY if not manav or others bot
-        if group_bot != "rm_daily_txns_others_bot" and group_bot != "rm_daily_txns_manav_bot":
+        # Poornima group: also send to manav and others bots
+        if group_bot == "rm_daily_txns_poornima_bot":
+            send_to_bot("rm_daily_txns_manav_bot", bot_cfg, group_msg)
+            send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
+        # Other groups: send to others bot
+        elif group_bot != "rm_daily_txns_others_bot":
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
 
 

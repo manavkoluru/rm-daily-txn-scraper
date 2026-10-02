@@ -510,8 +510,12 @@ def main(only_account: str = None, only_group: str = None):
 
         # Send to group's own bot
         send_to_bot(group_bot, bot_cfg, group_msg)
-        # Send to others bot ONLY if not manav or others bot
-        if group_bot != "rm_daily_txns_others_bot" and group_bot != "rm_daily_txns_manav_bot":
+        # Poornima group: also send to manav and others bots
+        if group_bot == "rm_daily_txns_poornima_bot":
+            send_to_bot("rm_daily_txns_manav_bot", bot_cfg, group_msg)
+            send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
+        # Other groups: send to others bot
+        elif group_bot != "rm_daily_txns_others_bot":
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
 
 

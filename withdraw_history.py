@@ -309,7 +309,16 @@ def main(account_id: str):
             f"_{datetime.now().strftime('%d %b %Y, %I:%M %p IST')}_\n\n"
             + "\n\n".join(telegram_account_msgs)
         )
+
+        # Send to group's own bot
         send_to_bot(bot_name, bot_cfg, telegram_msg)
+        # Poornima group: also send to manav and others bots
+        if bot_name == "rm_daily_txns_poornima_bot":
+            send_to_bot("rm_daily_txns_manav_bot", bot_cfg, telegram_msg)
+            send_to_bot("rm_daily_txns_others_bot", bot_cfg, telegram_msg)
+        # Other groups: send to others bot
+        elif bot_name != "rm_daily_txns_others_bot":
+            send_to_bot("rm_daily_txns_others_bot", bot_cfg, telegram_msg)
 
     print(f"{'═'*W}\n")
 
