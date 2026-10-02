@@ -41,6 +41,7 @@ WALLET_ADDRESS      = "0x6E8fD80B07BE01FD47bf3b2d47B8048e65c4A698"
 LOGIN_URL           = os.getenv("RM_LOGIN_URL", "https://app.richmakers.space")
 WITHDRAWAL_URL      = "https://app.richmakers.space/member/71363674754d5373/71376131744d4f716d7136586e77253344253344"
 PERSONAL_INFO_URL   = "https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344"
+WALLET_SETTINGS_URL = "https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f636152767336656f714f62"
 SHARED_PASSWORD     = os.getenv("RM_PASSWORD", "")
 MIN_WITHDRAWAL_USD  = 50   # skip if floor(balance) < this (Sunday minimum)
 MAX_WITHDRAWAL_USD  = 1000 # cap single withdrawal at this amount
@@ -88,6 +89,46 @@ def chunk_message(message: str, max_length: int = 4096) -> list[str]:
         chunks.append(current_chunk.rstrip("\n"))
 
     return chunks if chunks else [message]
+
+
+def update_wallet_address(page) -> bool:
+    """
+    Updates the wallet address in Profile Settings → Withdraw Details.
+    Called when "Please update Crypto Wallet Address" error is encountered.
+    Returns True if update successful, False otherwise.
+    """
+    try:
+        print("Updating wallet address... ", end="", flush=True)
+        page.goto(WALLET_SETTINGS_URL)
+        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+        time.sleep(1)
+
+        # Find and fill the USDT BEP-20 field (name="usdt_address", id="input49")
+        try:
+            page.wait_for_selector("input[name='usdt_address']", timeout=5_000)
+        except:
+            # Try alternative selectors
+            page.wait_for_selector("#input49, input[placeholder*='USDT']", timeout=5_000)
+
+        # Fill the field with the wallet address
+        page.fill("input[name='usdt_address']", WALLET_ADDRESS)
+        time.sleep(0.5)
+
+        # Look for save button and click it
+        try:
+            page.click("button[type='submit']:has-text('Save'), button:has-text('Update'), button:has-text('Confirm')")
+            time.sleep(2)
+        except:
+            # Try to find any submit button
+            page.click("button[type='submit']")
+            time.sleep(2)
+
+        print("✅ Updated")
+        return True
+
+    except Exception as e:
+        print(f"❌ Failed: {e}")
+        return False
 
 
 def send_to_bot(bot_name: str, bot_config: dict, message: str) -> None:
@@ -191,51 +232,85 @@ def do_withdrawal(page, username: str, remaining_balance: float, dry_run: bool =
             "recent_credit": recent_credit,
         }
 
-    # Fill and submit withdrawal form
-    try:
-        page.fill("input[name='amount']", str(int(final_withdraw_amount)))
-        page.fill("input[name='wallet_address']", WALLET_ADDRESS)
-        page.click("button[type='submit'], button:has-text('Withdraw')")
-
-        # Wait for response/alert
+    # Fill and submit withdrawal form (with retry for wallet address)
+    retry_count = 0
+    while retry_count <= 1:
         try:
-            page.wait_for_selector(".alert, [role='alert']", timeout=5_000)
-            ui_msg = page.text_content(".alert, [role='alert']") or ""
-        except:
-            ui_msg = "Withdrawal submitted (no confirmation detected)"
+            page.fill("input[name='amount']", str(int(final_withdraw_amount)))
+            page.fill("input[name='wallet_address']", WALLET_ADDRESS)
+            page.click("button[type='submit'], button:has-text('Withdraw')")
 
-        # Assume success if no explicit error
-        if "error" not in ui_msg.lower() and "failed" not in ui_msg.lower():
+            # Wait for response/alert
+            try:
+                page.wait_for_selector(".alert, [role='alert']", timeout=5_000)
+                ui_msg = page.text_content(".alert, [role='alert']") or ""
+            except:
+                ui_msg = "Withdrawal submitted (no confirmation detected)"
+
+            # Check for wallet address error
+            if "please update crypto wallet address" in ui_msg.lower() or "update crypto wallet" in ui_msg.lower():
+                if retry_count == 0:
+                    # Try to update wallet address
+                    if update_wallet_address(page):
+                        # Return to withdrawal page and retry
+                        retry_count += 1
+                        page.goto(WITHDRAWAL_URL)
+                        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+                        time.sleep(1)
+                        continue
+                    else:
+                        return {
+                            "status": "error",
+                            "balance": current_balance,
+                            "amount": 0,
+                            "reason": "Could not update wallet address",
+                            "ui_msg": ui_msg,
+                            "time_blocked": False,
+                            "recent_credit": recent_credit,
+                        }
+                else:
+                    return {
+                        "status": "error",
+                        "balance": current_balance,
+                        "amount": 0,
+                        "reason": "Wallet address update did not resolve issue",
+                        "ui_msg": ui_msg,
+                        "time_blocked": False,
+                        "recent_credit": recent_credit,
+                    }
+
+            # Assume success if no explicit error
+            if "error" not in ui_msg.lower() and "failed" not in ui_msg.lower():
+                return {
+                    "status": "success",
+                    "balance": current_balance,
+                    "amount": final_withdraw_amount,
+                    "reason": "Success",
+                    "ui_msg": ui_msg,
+                    "time_blocked": False,
+                    "recent_credit": recent_credit,
+                }
+            else:
+                return {
+                    "status": "skipped",
+                    "balance": current_balance,
+                    "amount": 0,
+                    "reason": "Site error/unavailable",
+                    "ui_msg": ui_msg,
+                    "time_blocked": "outside" in ui_msg.lower() or "window" in ui_msg.lower(),
+                    "recent_credit": recent_credit,
+                }
+
+        except Exception as e:
             return {
-                "status": "success",
+                "status": "error",
                 "balance": current_balance,
-                "amount": final_withdraw_amount,
-                "reason": "Success",
-                "ui_msg": ui_msg,
+                "amount": 0,
+                "reason": str(e),
+                "ui_msg": "",
                 "time_blocked": False,
                 "recent_credit": recent_credit,
             }
-        else:
-            return {
-                "status": "skipped",
-                "balance": current_balance,
-                "amount": 0,
-                "reason": "Site error/unavailable",
-                "ui_msg": ui_msg,
-                "time_blocked": "outside" in ui_msg.lower() or "window" in ui_msg.lower(),
-                "recent_credit": recent_credit,
-            }
-
-    except Exception as e:
-        return {
-            "status": "error",
-            "balance": current_balance,
-            "amount": 0,
-            "reason": str(e),
-            "ui_msg": "",
-            "time_blocked": False,
-            "recent_credit": recent_credit,
-        }
 
 
 # ── Main ──────────────────────────────────────────────────────────────────────

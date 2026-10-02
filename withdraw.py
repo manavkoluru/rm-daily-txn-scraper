@@ -40,6 +40,7 @@ WALLET_ADDRESS      = "0x6E8fD80B07BE01FD47bf3b2d47B8048e65c4A698"
 LOGIN_URL           = os.getenv("RM_LOGIN_URL", "https://app.richmakers.space")
 WITHDRAWAL_URL      = "https://app.richmakers.space/member/71363674754d5373/71376131744d4f716d7136586e77253344253344"
 PERSONAL_INFO_URL   = "https://app.richmakers.space/member/70724b7875394773/70724b347264476365715761644b79576f3559253344"
+WALLET_SETTINGS_URL = "https://app.richmakers.space/member/6c62436b7539536d7251253344253344/6f636152767336656f714f62"
 SHARED_PASSWORD     = os.getenv("RM_PASSWORD", "")
 MIN_WITHDRAWAL_USD  = 10    # skip if floor(balance) < this
 MAX_WITHDRAWAL_USD  = 1000  # cap single withdrawal at this amount
@@ -207,6 +208,52 @@ def read_ui_alerts(page) -> str:
         return ""
 
 
+def update_wallet_address(page) -> bool:
+    """
+    Updates the wallet address in Profile Settings → Withdraw Details.
+    Called when "Please update Crypto Wallet Address" error is encountered.
+    Returns True if update successful, False otherwise.
+    """
+    try:
+        print("Updating wallet address... ", end="", flush=True)
+        page.goto(WALLET_SETTINGS_URL)
+        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+        time.sleep(1)
+
+        # Find and fill the USDT BEP-20 field (name="usdt_address", id="input49")
+        try:
+            page.wait_for_selector("input[name='usdt_address']", timeout=5_000)
+        except:
+            # Try alternative selectors
+            page.wait_for_selector("#input49, input[placeholder*='USDT']", timeout=5_000)
+
+        # Fill the field with the wallet address
+        page.fill("input[name='usdt_address']", WALLET_ADDRESS)
+        time.sleep(0.5)
+
+        # Look for save button and click it
+        try:
+            page.click("button[type='submit']:has-text('Save'), button:has-text('Update'), button:has-text('Confirm')")
+            time.sleep(2)
+        except:
+            # Try to find any submit button
+            page.click("button[type='submit']")
+            time.sleep(2)
+
+        # Check for success message
+        success_msg = read_ui_alerts(page)
+        if "success" in success_msg.lower() or "updated" in success_msg.lower():
+            print("✅ Success")
+            return True
+        else:
+            print("⚠️  Updated (no confirmation)")
+            return True  # Assume success
+
+    except Exception as e:
+        print(f"❌ Failed: {e}")
+        return False
+
+
 # ── Core withdrawal ───────────────────────────────────────────────────────────
 
 def do_withdrawal(page, username: str, dry_run: bool = False) -> dict:
@@ -347,6 +394,33 @@ def do_withdrawal(page, username: str, dry_run: bool = False) -> dict:
                 result["time_blocked"] = True
                 print(f"⏭  {post_alerts}")
                 return result
+
+            elif "please update crypto wallet address" in combined or "update crypto wallet" in combined:
+                # New account: wallet address not set in profile
+                if retry_count == 0:
+                    print(f"⚠️  {post_alerts}")
+                    if update_wallet_address(page):
+                        # Return to withdrawal page and retry
+                        retry_count += 1
+                        print("         Retrying withdrawal... ", end="", flush=True)
+                        page.goto(WITHDRAWAL_URL)
+                        page.wait_for_load_state("domcontentloaded", timeout=10_000)
+                        time.sleep(1)
+                        page.fill("input[placeholder='re-enter your withdrawal address']", WALLET_ADDRESS)
+                        page.fill("input[placeholder='Enter Amount']", str(amount))
+                        page.fill("input[placeholder='Enter Login Password']", SHARED_PASSWORD)
+                        continue
+                    else:
+                        result["status"] = "error"
+                        result["reason"] = "Could not update wallet address"
+                        print(f"❌ Wallet update failed")
+                        return result
+                else:
+                    # Already retried once, give up
+                    result["status"] = "error"
+                    result["reason"] = "Wallet address update did not resolve issue"
+                    print(f"❌ Still missing wallet address after update")
+                    return result
 
             elif "low wallet balance" in combined or "low balance" in combined:
                 # Retry with reduced amount (balance - 1)
