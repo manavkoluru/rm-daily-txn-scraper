@@ -419,17 +419,32 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             total_credit_usd += cr
             total_credit_inr += returns_inr(cr, is_91)
 
+        # Count successful accounts (not errors)
+        success_count = len([l for l in lines if l.startswith("✅")])
+
+        # Extract group name from bot_name: rm_daily_txns_manav_bot → Manav
+        group_label = bot_name.replace("rm_daily_txns_", "").replace("_bot", "").capitalize()
+
         summary_footer = (
             "\n\n━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 *Total E-Wallet:* ${total_ewallet_usd:,.2f} (₹{total_ewallet_inr:,.2f})\n"
             f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})"
         )
 
-        message = "📊 *Daily Automated Summary*\n\n" + "\n\n".join(lines) + summary_footer
+        message = (
+            f"📊 *Daily Automated Summary — {group_label}*\n"
+            f"👥 {success_count} account{'s' if success_count != 1 else ''}\n\n"
+            + "\n\n".join(lines) + summary_footer
+        )
 
-        # Send to group's own bot and also to others bot
+        # Send to group's own bot
         send_to_bot(bot_name, bot_config, message)
-        if bot_name != "rm_daily_txns_others_bot":
+        # Poornima group: also send to manav and others bots
+        if bot_name == "rm_daily_txns_poornima_bot":
+            send_to_bot("rm_daily_txns_manav_bot", bot_config, message)
+            send_to_bot("rm_daily_txns_others_bot", bot_config, message)
+        # Other groups: send to others bot
+        elif bot_name != "rm_daily_txns_others_bot":
             send_to_bot("rm_daily_txns_others_bot", bot_config, message)
 
 
