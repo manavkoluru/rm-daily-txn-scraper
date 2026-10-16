@@ -571,6 +571,8 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         total_ewallet_inr = 0.0
         total_credit_usd = 0.0
         total_credit_inr = 0.0
+        total_remaining_usd = 0.0
+        total_remaining_inr = 0.0
 
         for uid in user_ids:
             if uid not in scraped_data:
@@ -579,10 +581,13 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             is_91 = uid in rate_91_set
             ew = d.get("e_wallet_balance", 0.0)
             cr = d.get("recent_credit_amount", 0.0)
+            rem = d.get("remaining", 0.0)
             total_ewallet_usd += ew
             total_ewallet_inr += returns_inr(ew, is_91)
             total_credit_usd += cr
             total_credit_inr += returns_inr(cr, is_91)
+            total_remaining_usd += rem
+            total_remaining_inr += returns_inr(rem, is_91)
 
         # Count successful accounts (not errors)
         success_count = len([l for l in lines if l.startswith("✅")])
@@ -593,7 +598,8 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         summary_footer = (
             "\n\n━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 *Total E-Wallet:* ${total_ewallet_usd:,.2f} (₹{total_ewallet_inr:,.2f})\n"
-            f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})"
+            f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})\n"
+            f"🏦 *Total Remaining:* ${total_remaining_usd:,.2f} (₹{total_remaining_inr:,.2f})"
         )
 
         message = (
