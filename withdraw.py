@@ -28,6 +28,9 @@ from datetime import datetime
 
 import requests
 
+from main import fetch_activation_history
+from shared_split import earliest_activation_date, load_shared_accounts, split_status, weekly_split
+
 try:
     from playwright.sync_api import sync_playwright
     PLAYWRIGHT_AVAILABLE = True
@@ -62,6 +65,54 @@ def load_rate_91_set() -> set:
 def returns_inr(usd: float, is_91: bool) -> float:
     """E-wallet withdrawals use the returns rate (7% tax deducted)."""
     return round(usd * (91 if is_91 else 97) * 0.93, 2)
+
+
+# ── Shared account split (see shared_accounts.json) ──────────────────────────
+
+def effective_usd(r: dict) -> float:
+    """Amount this result adds to its own group's total (owner share for shared accounts)."""
+    return r["shared"]["owner_usd"] if "shared" in r else r["amount"]
+
+
+def shared_split_text(r: dict) -> str:
+    """Owner-group (Manav) lines for a shared account withdrawal."""
+    sh = r["shared"]
+    cfg = sh["cfg"]
+    lines = [f"     🤝 Shared with Ranjitha — total investment ${cfg['total_investment_usd']:,}"]
+    if sh["active"]:
+        lines.append(
+            f"     Ranjitha share: *${sh['ranj_usd']:,}* (₹{cfg['weekly_share_inr']:,}) · "
+            f"Manav share: *${sh['owner_usd']:,}* (₹{returns_inr(sh['owner_usd'], r['is_91']):,.2f})"
+        )
+    else:
+        lines.append(f"     Ranjitha share ended after {cfg['split_days']} days — full amount to Manav")
+    if r["amount"] < cfg["withdraw_alert_below_usd"]:
+        lines.append(
+            f"     ⚠️ Withdrawal ${r['amount']} is below ${cfg['withdraw_alert_below_usd']} "
+            f"(Manav portion below ${cfg['manav_alert_below_usd']})"
+        )
+    return "\n".join(lines)
+
+
+def ranjitha_shared_text(r: dict) -> str:
+    """Ranjitha-group line for a shared account withdrawal."""
+    name = f"{r['display_name']} ({r['username']})"
+    if "shared" not in r:
+        return f"  ⏭  *{name}* _(shared)_\n     Reason: {r['reason']}"
+    sh = r["shared"]
+    cfg = sh["cfg"]
+    rate = "@91rs" if r["is_91"] else "@97rs"
+    lines = [
+        f"  🤝 *{name}* _{rate} (shared)_",
+        f"     Total investment: ${cfg['total_investment_usd']:,} · Your share: ${cfg['split_share_usd']:,}",
+    ]
+    if sh["active"]:
+        lines.append(
+            f"     Weekly share: *${sh['ranj_usd']:,}* (₹{cfg['weekly_share_inr']:,}) — added to total"
+        )
+    else:
+        lines.append(f"     Share ended after {cfg['split_days']} days")
+    return "\n".join(lines)
 
 
 # ── JSON loaders ─────────────────────────────────────────────────────────────
@@ -495,6 +546,7 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     name_map     = _load("user_name_mapping.json")
     rate_91_set  = load_rate_91_set()
     known_groups = derive_known_groups(mapping)
+    shared_accounts = load_shared_accounts()
 
     with open(os.path.join(_BASE, "bot_config.json")) as f:
         bot_cfg = json.load(f)
@@ -580,6 +632,13 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
 
             try:
                 r = do_withdrawal(page, username, dry_run=dry_run)
+                if username in shared_accounts and r["amount"] > 0 and (r["status"] == "success" or dry_run):
+                    cfg = shared_accounts[username]
+                    start = earliest_activation_date(fetch_activation_history(page))
+                    active, days = split_status(start, cfg)
+                    ranj_usd, owner_usd = weekly_split(r["amount"], active, cfg)
+                    r["shared"] = {"cfg": cfg, "active": active, "days": days,
+                                   "ranj_usd": ranj_usd, "owner_usd": owner_usd}
             except Exception as e:
                 r = {"status": "error", "amount": 0, "balance": 0.0,
                      "reason": "Unhandled exception", "ui_msg": str(e), "time_blocked": False}
@@ -661,6 +720,14 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
     for r in results:
         group_results[r["bot"]].append(r)
 
+    # Shared accounts: the split bot (e.g. Ranjitha) also gets a message for its share
+    shared_by_bot: dict[str, list] = defaultdict(list)
+    for r in results:
+        if r["username"] in shared_accounts:
+            shared_by_bot[shared_accounts[r["username"]]["split_bot"]].append(r)
+    for split_bot in shared_by_bot:
+        group_results.setdefault(split_bot, [])
+
     # Send one message per group to their bot + others bot
     tg_tag = "\\[DRY RUN\\] " if dry_run else ""
     time_notice = (
@@ -670,7 +737,9 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
 
     for group_bot, group_res in group_results.items():
         # Count successful withdrawals
-        success_count = len([r for r in group_res if r["status"] == "success"])
+        success_count = len([r for r in group_res if r["status"] == "success"]) + len(
+            [r for r in shared_by_bot.get(group_bot, []) if r["status"] == "success"]
+        )
         header = f"👥 *{group_label(group_bot)}* ({success_count} account{'s' if success_count != 1 else ''})"
         account_lines = []
         for r in group_res:
@@ -701,10 +770,33 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
                     f"     Error: {r['reason']}"
                     f"{site_str}"
                 )
+            if "shared" in r:
+                account_lines[-1] += "\n" + shared_split_text(r)
 
-        g_usd = sum(r["amount"] for r in group_res if r["status"] == "success")
-        g_inr = sum(returns_inr(r["amount"], r["is_91"]) for r in group_res if r["status"] == "success")
-        subtotal = f"\n  _Subtotal: ${g_usd:,} (₹{g_inr:,.2f})_" if g_usd else ""
+        for r in shared_by_bot.get(group_bot, []):
+            account_lines.append(ranjitha_shared_text(r))
+
+        g_usd = sum(effective_usd(r) for r in group_res if r["status"] == "success")
+        g_inr = sum(returns_inr(effective_usd(r), r["is_91"]) for r in group_res if r["status"] == "success")
+        split_rows = [r for r in shared_by_bot.get(group_bot, []) if "shared" in r and r["status"] == "success"]
+        split_usd = sum(r["shared"]["ranj_usd"] for r in split_rows)
+        split_inr = sum(r["shared"]["cfg"]["weekly_share_inr"] for r in split_rows if r["shared"]["active"])
+        t_usd = g_usd + split_usd
+        t_inr = g_inr + split_inr
+        subtotal = f"\n  _Subtotal: ${t_usd:,} (₹{t_inr:,.2f})_" if t_usd else ""
+        for r in group_res:
+            if "shared" in r and r["status"] == "success":
+                owner = r["shared"]["owner_usd"]
+                subtotal += (
+                    f"\n  🤝 _{r['username']} Manav share ${owner:,} "
+                    f"(₹{returns_inr(owner, r['is_91']):,.2f}) explicitly added to this total "
+                    f"(Ranjitha share excluded)_"
+                )
+        for r in split_rows:
+            subtotal += (
+                f"\n  🤝 _{r['username']} Ranjitha share ${r['shared']['ranj_usd']:,} "
+                f"(₹{r['shared']['cfg']['weekly_share_inr']:,}) explicitly added to this total_"
+            )
 
         group_msg = (
             f"💸 *{tg_tag}Weekly Withdrawal — {group_label(group_bot)}*\n"

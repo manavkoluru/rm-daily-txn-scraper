@@ -7,6 +7,13 @@ from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 
+from shared_split import (
+    daily_split,
+    earliest_activation_date,
+    load_shared_accounts,
+    split_status,
+)
+
 try:
     from playwright.sync_api import sync_playwright
     PLAYWRIGHT_AVAILABLE = True
@@ -448,7 +455,48 @@ def format_activation_history(activations: list[dict]) -> str:
     return "\n".join(lines) if len(lines) > 1 else ""
 
 
-def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False, activation_history: list[dict] = None) -> str:
+def format_manav_shared_lines(credit: float, cfg: dict, status: tuple, is_91: bool) -> list[str]:
+    """Owner-group (Manav) lines for a shared account: shows Ranjitha's share and the remainder."""
+    active, days = status
+    ranj, owner = daily_split(credit, active, cfg)
+    total = cfg["total_investment_usd"]
+    split = cfg["split_share_usd"]
+    lines = [
+        f"  🤝 *Shared account* — Total investment: ${total:,} "
+        f"(Ranjitha ${split:,} / Manav ${total - split:,})"
+    ]
+    if active:
+        day_info = f" (day {days} of {cfg['split_days']})" if days is not None else ""
+        lines.append(f"  • *Ranjitha share:* ${ranj:,.2f} {inr_bracket(returns_inr(ranj, is_91))}/day{day_info}")
+    else:
+        lines.append(f"  • *Ranjitha share:* ended after {cfg['split_days']} days")
+    lines.append(f"  • *Manav share (credit − Ranjitha):* ${owner:,.2f} {inr_bracket(returns_inr(owner, is_91))}")
+    return lines
+
+
+def format_ranjitha_shared_block(username: str, data: dict, display_name: str, is_91: bool, cfg: dict, status: tuple) -> str:
+    """Ranjitha-group block for a shared account (her $3,000 share only)."""
+    active, days = status
+    label = f"{display_name} ({username})" if display_name else username
+    rate_tag = "@91rs" if is_91 else "@97rs"
+    credit = data.get("recent_credit_amount", 0.0)
+    ranj, _ = daily_split(credit, active, cfg)
+    lines = [
+        f"🤝 *{label}* _{rate_tag}_ _(shared)_",
+        f"  • *Total active investment:* ${cfg['total_investment_usd']:,}",
+        f"  • *Your share:* ${cfg['split_share_usd']:,}",
+    ]
+    if active:
+        day_info = f" (day {days} of {cfg['split_days']})" if days is not None else " (activation date unknown)"
+        lines.append(
+            f"  • *Your daily credit:* ${ranj:,.2f} {inr_bracket(returns_inr(ranj, is_91))}{day_info}"
+        )
+    else:
+        lines.append(f"  • *Your daily credit:* ended after {cfg['split_days']} days")
+    return "\n".join(lines)
+
+
+def format_account_report(username: str, data: dict, display_name: str = "", is_91: bool = False, activation_history: list[dict] = None, shared_lines: list[str] = None) -> str:
     """Formats dashboard data into Markdown for Telegram.
 
     E-Wallet / Remaining / Recent Credit: after 7% tax (91 or 97 INR/USD)
@@ -497,6 +545,9 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
         v = data["recent_credit_amount"]
         date_str = data.get("recent_credit_date", "")
         lines.append(f"  • *Recent Credit:* ${v:,.2f} {inr_bracket(returns_inr(v, is_91))} on {date_str}")
+    if shared_lines:
+        lines.append("")
+        lines.extend(shared_lines)
     return "\n".join(lines)
 
 
@@ -522,6 +573,12 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         filtered_mapping = {k: v for k, v in filtered_mapping.items() if k != "rm_daily_txns_manjula_bot"}
     usernames = get_accounts(filtered_mapping)
 
+    # Shared accounts must also be scraped for their split bot (e.g. Ranjitha)
+    shared_accounts = load_shared_accounts()
+    for uid, cfg in shared_accounts.items():
+        if cfg["split_bot"] in filtered_mapping and uid not in usernames:
+            usernames.append(uid)
+
     if not usernames:
         print("Error: user_bot_mapping.json has no user entries.")
         return
@@ -529,6 +586,8 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
     # Scrape each unique account once — cache both formatted text and raw data
     scraped_text: dict[str, str] = {}
     scraped_data: dict[str, dict] = {}
+    shared_status: dict[str, tuple] = {}      # {shared R-ID: (active, days_elapsed)}
+    shared_split_text: dict[str, str] = {}    # {shared R-ID: Ranjitha-group block}
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
@@ -537,6 +596,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             context = browser.new_context()
             page = context.new_page()
             is_91 = username in rate_91_set
+            shared_cfg = shared_accounts.get(username)
             try:
                 # Fetch account name from website (fallback to mapping if not available)
                 display_name = fetch_account_name(page)
@@ -546,12 +606,26 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
                 data = fetch_data_for_account(page, username)
                 activation_history = fetch_activation_history(page)
                 scraped_data[username] = data
-                scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91, activation_history)}"
+
+                shared_lines = None
+                if shared_cfg:
+                    status = split_status(earliest_activation_date(activation_history), shared_cfg)
+                    shared_status[username] = status
+                    shared_lines = format_manav_shared_lines(
+                        data.get("recent_credit_amount", 0.0), shared_cfg, status, is_91
+                    )
+                    shared_split_text[username] = "✅ " + format_ranjitha_shared_block(
+                        username, data, display_name, is_91, shared_cfg, status
+                    )
+
+                scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91, activation_history, shared_lines)}"
             except Exception as e:
                 display_name = name_mapping.get(username, "")
                 label = f"{display_name} ({username})" if display_name else username
                 scraped_data[username] = {}
                 scraped_text[username] = f"❌ *{label}*: Failed (`{str(e)}`)"
+                if shared_cfg:
+                    shared_split_text[username] = scraped_text[username]
             finally:
                 context.close()
             print(scraped_text[username])
@@ -562,7 +636,12 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
     for bot_name, user_ids in bot_user_mapping.items():
         if only_bot and bot_name != only_bot:
             continue
+        # Shared accounts whose split goes to this bot (e.g. Ranjitha)
+        split_uids = [uid for uid, cfg in shared_accounts.items()
+                      if cfg["split_bot"] == bot_name and uid in shared_split_text]
+
         lines = [scraped_text[uid] for uid in user_ids if uid in scraped_text]
+        lines += [shared_split_text[uid] for uid in split_uids]
         if not lines:
             continue
 
@@ -571,6 +650,9 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         total_ewallet_inr = 0.0
         total_credit_usd = 0.0
         total_credit_inr = 0.0
+        total_remaining_usd = 0.0
+        total_remaining_inr = 0.0
+        shared_notes = []
 
         for uid in user_ids:
             if uid not in scraped_data:
@@ -579,10 +661,35 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             is_91 = uid in rate_91_set
             ew = d.get("e_wallet_balance", 0.0)
             cr = d.get("recent_credit_amount", 0.0)
+            rem = d.get("remaining", 0.0)
+            if uid in shared_status:
+                # Owner bot (Manav): credit minus Ranjitha's share
+                cfg = shared_accounts[uid]
+                ranj_cr, cr = daily_split(cr, shared_status[uid][0], cfg)
+                shared_notes.append(
+                    f"🤝 *{uid}* shared: Ranjitha share ${ranj_cr:,.2f} "
+                    f"(₹{returns_inr(ranj_cr, is_91):,.2f}) deducted from Total Daily Credit"
+                )
             total_ewallet_usd += ew
             total_ewallet_inr += returns_inr(ew, is_91)
             total_credit_usd += cr
             total_credit_inr += returns_inr(cr, is_91)
+            total_remaining_usd += rem
+            total_remaining_inr += returns_inr(rem, is_91)
+
+        for uid in split_uids:
+            # Split bot (Ranjitha): her fixed share is added to Total Daily Credit
+            if uid not in shared_status:  # scrape failed — no credit data
+                continue
+            cfg = shared_accounts[uid]
+            is_91 = uid in rate_91_set
+            ranj_cr, _ = daily_split(scraped_data[uid].get("recent_credit_amount", 0.0), shared_status[uid][0], cfg)
+            total_credit_usd += ranj_cr
+            total_credit_inr += returns_inr(ranj_cr, is_91)
+            shared_notes.append(
+                f"🤝 *{uid}* shared: your share ${ranj_cr:,.2f} "
+                f"(₹{returns_inr(ranj_cr, is_91):,.2f}) included in Total Daily Credit"
+            )
 
         # Count successful accounts (not errors)
         success_count = len([l for l in lines if l.startswith("✅")])
@@ -593,8 +700,11 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         summary_footer = (
             "\n\n━━━━━━━━━━━━━━━━━━━━\n"
             f"💰 *Total E-Wallet:* ${total_ewallet_usd:,.2f} (₹{total_ewallet_inr:,.2f})\n"
-            f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})"
+            f"📈 *Total Daily Credit:* ${total_credit_usd:,.2f} (₹{total_credit_inr:,.2f})\n"
+            f"🏦 *Total Remaining:* ${total_remaining_usd:,.2f} (₹{total_remaining_inr:,.2f})"
         )
+        if shared_notes:
+            summary_footer += "\n" + "\n".join(shared_notes)
 
         message = (
             f"📊 *Daily Automated Summary — {group_label}*\n"

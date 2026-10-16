@@ -1,0 +1,16 @@
+{
+  "_comment": "Shared accounts split between two groups. owner_bot gets the full account (withdrawal + remainder); split_bot gets the fixed share. split_days counted from earliest activation date.",
+  "R163446": {
+    "name": "Manav4",
+    "owner_bot": "rm_daily_txns_manav_bot",
+    "split_bot": "rm_daily_txns_ranjitha_bot",
+    "total_investment_usd": 6000,
+    "split_share_usd": 3000,
+    "daily_share_usd": 15,
+    "weekly_share_usd": 105,
+    "weekly_share_inr": 9470,
+    "split_days": 400,
+    "withdraw_alert_below_usd": 210,
+    "manav_alert_below_usd": 105
+  }
+}
