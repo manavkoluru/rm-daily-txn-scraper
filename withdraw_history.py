@@ -76,6 +76,40 @@ def send_to_bot(bot_key: str, bot_config: dict, message: str) -> None:
 
 # ── HTML Parsing ──────────────────────────────────────────────────────────────
 
+DATE_FORMATS = [
+    "%d-%b-%Y %I:%M %p",  # 06-Sep-2026 09:37 AM
+    "%d-%b-%Y",           # 06-Sep-2026
+    "%d-%m-%Y",           # 06-09-2026
+]
+
+
+def _parse_withdrawal_date(date_str: str):
+    """Returns datetime for a date string, or None if it cannot be parsed."""
+    for fmt in DATE_FORMATS:
+        try:
+            return datetime.strptime(date_str.strip(), fmt)
+        except ValueError:
+            continue
+    return None
+
+
+def _latest_five_oldest_to_newest(withdrawals: list[dict]) -> list[dict]:
+    """Selects the 5 most recent withdrawals by date, returned oldest → newest.
+
+    Falls back to page order (last 5 rows) if any date cannot be parsed.
+    """
+    if not withdrawals:
+        return []
+
+    dated = [(w, _parse_withdrawal_date(w["date"])) for w in withdrawals]
+    if any(d is None for _, d in dated):
+        return withdrawals[-5:]
+
+    # Newest first, take 5, then flip so the list reads oldest → newest
+    latest = sorted(dated, key=lambda item: item[1], reverse=True)[:5]
+    return [w for w, _ in reversed(latest)]
+
+
 def parse_withdrawal_history(html_content: str) -> list[dict]:
     """Parses withdrawal history HTML, extracting Date, Amount, Status."""
     soup = BeautifulSoup(html_content, "html.parser")
@@ -140,8 +174,7 @@ def parse_withdrawal_history(html_content: str) -> list[dict]:
                         "status": status_val,
                     })
 
-    # Return last 5 withdrawals (reverse chronological order)
-    return withdrawals[-5:] if withdrawals else []
+    return _latest_five_oldest_to_newest(withdrawals)
 
 
 def fetch_withdrawal_history(page, username: str) -> list[dict]:
