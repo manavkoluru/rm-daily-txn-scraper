@@ -41,7 +41,7 @@ WORKFLOW_FILE      = "daily_scrape.yml"
 BRANCH             = "main"
 
 GITHUB_API    = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
-KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula"]
+KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula", "prithvi", "roopa"]
 
 # ── Help texts ────────────────────────────────────────────────────────────────
 
@@ -56,6 +56,8 @@ DAILY_HELP = """
 `/daily poornima`     — Poornima's accounts only
 `/daily manjula`     — Manjula's accounts only
 `/daily others`       — Others' accounts only
+`/daily prithvi`      — Prithvi's accounts only
+`/daily roopa`        — Roopa's accounts only
 
 *ℹ️ Info:*
 `/status`             — Last 5 GitHub Actions runs
@@ -73,6 +75,8 @@ WITHDRAW_HELP = """
 `/daily poornima`     — Poornima's accounts only
 `/daily manjula`     — Manjula's accounts only
 `/daily others`       — Others' accounts only
+`/daily prithvi`      — Prithvi's accounts only
+`/daily roopa`        — Roopa's accounts only
 
 *💸 Withdrawals:*
 `/withdraw_all`       — All accounts
@@ -82,6 +86,8 @@ WITHDRAW_HELP = """
 `/withdraw poornima`  — Poornima's accounts
 `/withdraw others`    — Others' accounts
 `/withdraw manjula`     — Manjula's accounts
+`/withdraw prithvi`   — Prithvi's accounts
+`/withdraw roopa`     — Roopa's accounts
 `/withdraw R553232`   — Single account by R\\-ID
 
 *ℹ️ Info:*
@@ -128,10 +134,10 @@ def gh_headers() -> dict:
 
 
 def trigger_workflow(job: str, account: str = "", group: str = "", bot: str = "") -> tuple[bool, str]:
+    # daily_scrape.yml declares a single `input` (group name or R-ID)
     inputs = {"job": job}
-    if account: inputs["account"] = account
-    if group:   inputs["group"]   = group
-    if bot:     inputs["bot"]     = bot
+    value = account or group or bot
+    if value: inputs["input"] = value
     url = f"{GITHUB_API}/actions/workflows/{WORKFLOW_FILE}/dispatches"
     try:
         r = requests.post(url, headers=gh_headers(),

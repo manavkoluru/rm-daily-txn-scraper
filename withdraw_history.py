@@ -350,7 +350,7 @@ def main(account_id: str):
             send_to_bot("rm_daily_txns_manav_bot", bot_cfg, telegram_msg)
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, telegram_msg)
         # Other groups: send to others bot
-        elif bot_name != "rm_daily_txns_others_bot":
+        elif bot_name not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot"):
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, telegram_msg)
 
     print(f"{'═'*W}\n")
