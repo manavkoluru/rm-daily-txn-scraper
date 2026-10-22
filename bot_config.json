@@ -23,6 +23,14 @@
     "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
     "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
   },
+  "rm_daily_txns_prithvi_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
+  "rm_daily_txns_roopa_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
   "rm_daily_txns_vasu_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_VASU",
     "chat_id_env": "TELEGRAM_CHAT_ID_VASU"
