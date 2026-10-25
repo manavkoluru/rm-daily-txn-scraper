@@ -403,6 +403,8 @@ def main(only_account: str = None, only_group: str = None):
 
             try:
                 data = fetch_data_for_account(page, username)
+                if is_91:  # listed for 91; a top-up moves the account to 97
+                    is_91 = resolve_is_91(username, rate_91_set, fetch_activation_history(page))
                 result = check_flushout(username, data, is_91)
                 result["bot"] = user_to_bot.get(username, "rm_daily_txns_others_bot")
                 result["display_name"] = display

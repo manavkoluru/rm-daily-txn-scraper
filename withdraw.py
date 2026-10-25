@@ -29,6 +29,7 @@ from datetime import datetime
 import requests
 
 from main import fetch_activation_history
+from rate_rules import resolve_is_91
 from shared_split import earliest_activation_date, load_shared_accounts, split_status, weekly_split
 
 try:
@@ -632,6 +633,9 @@ def main(only_account: str = None, only_group: str = None, dry_run: bool = False
 
             try:
                 r = do_withdrawal(page, username, dry_run=dry_run)
+                if username in rate_91_set:
+                    # 91 only while the account has a single investment; a top-up moves it to 97
+                    is_91 = resolve_is_91(username, rate_91_set, fetch_activation_history(page))
                 if username in shared_accounts and r["amount"] > 0 and (r["status"] == "success" or dry_run):
                     cfg = shared_accounts[username]
                     start = earliest_activation_date(fetch_activation_history(page))
