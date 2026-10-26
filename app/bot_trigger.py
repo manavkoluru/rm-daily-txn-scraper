@@ -41,7 +41,7 @@ WORKFLOW_FILE      = "daily_scrape.yml"
 BRANCH             = "main"
 
 GITHUB_API    = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
-KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula", "prithvi", "roopa"]
+KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula", "prithvi", "roopa", "meghana", "deepa", "vandana", "gayathri"]
 
 # ── Help texts ────────────────────────────────────────────────────────────────
 
@@ -58,6 +58,10 @@ DAILY_HELP = """
 `/daily others`       — Others' accounts only
 `/daily prithvi`      — Prithvi's accounts only
 `/daily roopa`        — Roopa's accounts only
+`/daily meghana`      — Meghana's accounts only
+`/daily deepa`        — Deepa's accounts only
+`/daily vandana`      — Vandana's accounts only
+`/daily gayathri`     — Gayathri's accounts only
 
 *ℹ️ Info:*
 `/status`             — Last 5 GitHub Actions runs
@@ -77,6 +81,10 @@ WITHDRAW_HELP = """
 `/daily others`       — Others' accounts only
 `/daily prithvi`      — Prithvi's accounts only
 `/daily roopa`        — Roopa's accounts only
+`/daily meghana`      — Meghana's accounts only
+`/daily deepa`        — Deepa's accounts only
+`/daily vandana`      — Vandana's accounts only
+`/daily gayathri`     — Gayathri's accounts only
 
 *💸 Withdrawals:*
 `/withdraw_all`       — All accounts
@@ -88,6 +96,10 @@ WITHDRAW_HELP = """
 `/withdraw manjula`     — Manjula's accounts
 `/withdraw prithvi`   — Prithvi's accounts
 `/withdraw roopa`     — Roopa's accounts
+`/withdraw meghana`   — Meghana's accounts
+`/withdraw deepa`     — Deepa's accounts
+`/withdraw vandana`   — Vandana's accounts
+`/withdraw gayathri`  — Gayathri's accounts
 `/withdraw R553232`   — Single account by R\\-ID
 
 *ℹ️ Info:*

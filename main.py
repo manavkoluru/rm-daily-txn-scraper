@@ -13,6 +13,7 @@ from shared_split import (
     load_shared_accounts,
     split_status,
 )
+from rate_rules import resolve_is_91
 
 try:
     from playwright.sync_api import sync_playwright
@@ -586,6 +587,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
     # Scrape each unique account once — cache both formatted text and raw data
     scraped_text: dict[str, str] = {}
     scraped_data: dict[str, dict] = {}
+    account_is_91: dict[str, bool] = {}       # {R-ID: 91 rate applies (after top-up check)}
     shared_status: dict[str, tuple] = {}      # {shared R-ID: (active, days_elapsed)}
     shared_split_text: dict[str, str] = {}    # {shared R-ID: Ranjitha-group block}
 
@@ -595,7 +597,6 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         for username in usernames:
             context = browser.new_context()
             page = context.new_page()
-            is_91 = username in rate_91_set
             shared_cfg = shared_accounts.get(username)
             try:
                 # Fetch account name from website (fallback to mapping if not available)
@@ -605,6 +606,8 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
 
                 data = fetch_data_for_account(page, username)
                 activation_history = fetch_activation_history(page)
+                is_91 = resolve_is_91(username, rate_91_set, activation_history)
+                account_is_91[username] = is_91
                 scraped_data[username] = data
 
                 shared_lines = None
@@ -658,7 +661,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             if uid not in scraped_data:
                 continue
             d = scraped_data[uid]
-            is_91 = uid in rate_91_set
+            is_91 = account_is_91.get(uid, False)
             ew = d.get("e_wallet_balance", 0.0)
             cr = d.get("recent_credit_amount", 0.0)
             rem = d.get("remaining", 0.0)
@@ -682,7 +685,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             if uid not in shared_status:  # scrape failed — no credit data
                 continue
             cfg = shared_accounts[uid]
-            is_91 = uid in rate_91_set
+            is_91 = account_is_91.get(uid, False)
             ranj_cr, _ = daily_split(scraped_data[uid].get("recent_credit_amount", 0.0), shared_status[uid][0], cfg)
             total_credit_usd += ranj_cr
             total_credit_inr += returns_inr(ranj_cr, is_91)

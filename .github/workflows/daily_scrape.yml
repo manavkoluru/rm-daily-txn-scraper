@@ -34,7 +34,7 @@ on:
           - withdraw_history
           - all
       input:
-        description: 'Group name (manav|ranjitha|pavana|poornima|vasu|manjula|prithvi|roopa|all), Account ID (R553232), or leave empty for defaults'
+        description: 'Group name (manav|ranjitha|pavana|poornima|vasu|manjula|prithvi|roopa|meghana|deepa|vandana|gayathri|all), Account ID (R553232), or leave empty for defaults'
         required: false
         default: ''
         type: string
@@ -58,6 +58,7 @@ env:
   TELEGRAM_BOT_TOKEN_MANJULA:    ${{ secrets.TELEGRAM_BOT_TOKEN_MANJULA || secrets.TELEGRAM_BOT_TOKEN_MANAV }}
   TELEGRAM_CHAT_ID_MANJULA:      ${{ secrets.TELEGRAM_CHAT_ID_MANJULA || secrets.TELEGRAM_CHAT_ID_MANAV }}
   # prithvi/roopa deliver via the others bot (token_env in bot_config.json)
+  TELEGRAM_BOT_TOKEN_RICH_STATUS: ${{ secrets.TELEGRAM_BOT_TOKEN_RICH_STATUS }}
 
 jobs:
   # ── Daily scraper (runs every day) ─────────────────────────────────────────
