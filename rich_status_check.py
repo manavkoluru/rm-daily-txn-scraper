@@ -392,9 +392,7 @@ def derive_known_groups(bot_mapping: dict) -> list[str]:
     groups = []
     for key in bot_mapping.keys():
         if key.startswith("rm_daily_txns_") and key.endswith("_bot"):
-            group = key.replace("rm_daily_txns_", "").replace("_bot", "")
-            if group != "others":
-                groups.append(group)
+            groups.append(key.replace("rm_daily_txns_", "").replace("_bot", ""))
     return sorted(groups)
 
 
@@ -413,9 +411,9 @@ def main(only_account: str = None, only_group: str = None):
     with open(os.path.join(_BASE, "bot_config.json")) as f:
         bot_cfg = json.load(f)
 
-    # Handle special "all" group: all except manjula
+    # Handle special "all" group: every account in user_bot_mapping.json
     if only_group == "all":
-        mapping = {k: v for k, v in mapping.items() if k != "rm_daily_txns_manjula_bot" and k != "rm_daily_txns_others_bot"}
+        pass
     elif only_group:
         bot_key = group_to_bot_key(only_group)
         if bot_key not in mapping:
@@ -561,15 +559,8 @@ def main(only_account: str = None, only_group: str = None):
             + "\n\n".join(account_lines)
         )
 
-        # Send to group's own bot
-        send_to_bot(group_bot, bot_cfg, group_msg)
-        # Poornima group: also send to manav and others bots
-        if group_bot == "rm_daily_txns_poornima_bot":
-            send_to_bot("rm_daily_txns_manav_bot", bot_cfg, group_msg)
-            send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
-        # Other groups: send to others bot
-        elif group_bot not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot"):
-            send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
+        # All rich status reports go to the dedicated rich status bot only
+        send_to_bot("rm_rich_status_bot", bot_cfg, group_msg)
 
 
 if __name__ == "__main__":
