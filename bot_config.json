@@ -44,7 +44,7 @@
     "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
   },
   "rm_daily_txns_gayathri_bot": {
-    "token_env": "TELEGRAM_BOT_TOKEN_MANAV",
+    "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
     "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
   },
   "rm_rich_status_bot": {

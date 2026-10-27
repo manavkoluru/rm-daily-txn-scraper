@@ -722,7 +722,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             send_to_bot("rm_daily_txns_manav_bot", bot_config, message)
             send_to_bot("rm_daily_txns_others_bot", bot_config, message)
         # Other groups: send to others bot
-        elif bot_name not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot"):
+        elif bot_name not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot", "rm_daily_txns_gayathri_bot"):
             send_to_bot("rm_daily_txns_others_bot", bot_config, message)
 
 
