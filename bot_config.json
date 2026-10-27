@@ -31,6 +31,22 @@
     "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
     "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
   },
+  "rm_daily_txns_meghana_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_MANAV",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
+  "rm_daily_txns_deepa_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_MANAV",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
+  "rm_daily_txns_vandana_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_MANAV",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
+  "rm_daily_txns_gayathri_bot": {
+    "token_env": "TELEGRAM_BOT_TOKEN_OTHERS",
+    "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
+  },
   "rm_rich_status_bot": {
     "token_env": "TELEGRAM_BOT_TOKEN_RICH_STATUS",
     "chat_id_env": "TELEGRAM_CHAT_ID_MANAV"
