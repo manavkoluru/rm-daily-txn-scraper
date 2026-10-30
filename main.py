@@ -32,6 +32,7 @@ ACTIVATION_HISTORY_URL = "https://app.richmakers.space/member/6e4c79757363253242
 
 # Shared password for all accounts (set as repo secret RM_PASSWORD)
 SHARED_PASSWORD = os.getenv("RM_PASSWORD", "")
+MAX_LOGIN_ATTEMPTS = 3
 
 _BASE = os.path.dirname(os.path.abspath(__file__))
 
@@ -595,42 +596,52 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         browser = p.chromium.launch(headless=True)
 
         for username in usernames:
-            context = browser.new_context()
-            page = context.new_page()
             shared_cfg = shared_accounts.get(username)
-            try:
-                # Fetch account name from website (fallback to mapping if not available)
-                display_name = fetch_account_name(page)
-                if not display_name:
-                    display_name = name_mapping.get(username, "")
+            last_error = None
+            for attempt in range(1, MAX_LOGIN_ATTEMPTS + 1):
+                # Fresh context per attempt so a bad session/cookie does not carry over
+                context = browser.new_context()
+                page = context.new_page()
+                try:
+                    # Fetch account name from website (fallback to mapping if not available)
+                    display_name = fetch_account_name(page)
+                    if not display_name:
+                        display_name = name_mapping.get(username, "")
 
-                data = fetch_data_for_account(page, username)
-                activation_history = fetch_activation_history(page)
-                is_91 = resolve_is_91(username, rate_91_set, activation_history)
-                account_is_91[username] = is_91
-                scraped_data[username] = data
+                    data = fetch_data_for_account(page, username)
+                    activation_history = fetch_activation_history(page)
+                    is_91 = resolve_is_91(username, rate_91_set, activation_history)
+                    account_is_91[username] = is_91
+                    scraped_data[username] = data
 
-                shared_lines = None
-                if shared_cfg:
-                    status = split_status(earliest_activation_date(activation_history), shared_cfg)
-                    shared_status[username] = status
-                    shared_lines = format_manav_shared_lines(
-                        data.get("recent_credit_amount", 0.0), shared_cfg, status, is_91
-                    )
-                    shared_split_text[username] = "✅ " + format_ranjitha_shared_block(
-                        username, data, display_name, is_91, shared_cfg, status
-                    )
+                    shared_lines = None
+                    if shared_cfg:
+                        status = split_status(earliest_activation_date(activation_history), shared_cfg)
+                        shared_status[username] = status
+                        shared_lines = format_manav_shared_lines(
+                            data.get("recent_credit_amount", 0.0), shared_cfg, status, is_91
+                        )
+                        shared_split_text[username] = "✅ " + format_ranjitha_shared_block(
+                            username, data, display_name, is_91, shared_cfg, status
+                        )
 
-                scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91, activation_history, shared_lines)}"
-            except Exception as e:
+                    scraped_text[username] = f"✅ {format_account_report(username, data, display_name, is_91, activation_history, shared_lines)}"
+                    last_error = None
+                    break
+                except Exception as e:
+                    last_error = e
+                    if attempt < MAX_LOGIN_ATTEMPTS:
+                        print(f"[RETRY] {username} attempt {attempt}/{MAX_LOGIN_ATTEMPTS} failed: {e}")
+                finally:
+                    context.close()
+
+            if last_error is not None:
                 display_name = name_mapping.get(username, "")
                 label = f"{display_name} ({username})" if display_name else username
                 scraped_data[username] = {}
-                scraped_text[username] = f"❌ *{label}*: Failed (`{str(e)}`)"
+                scraped_text[username] = f"❌ *{label}*: Failed after {MAX_LOGIN_ATTEMPTS} attempts (`{str(last_error)}`)"
                 if shared_cfg:
                     shared_split_text[username] = scraped_text[username]
-            finally:
-                context.close()
             print(scraped_text[username])
 
         browser.close()
