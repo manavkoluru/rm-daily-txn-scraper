@@ -516,6 +516,10 @@ def main(only_account: str = None, only_group: str = None):
         if group_bot == "rm_daily_txns_poornima_bot":
             send_to_bot("rm_daily_txns_manav_bot", bot_cfg, group_msg)
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
+        # Ranjitha group: also send to manav bot
+        elif group_bot == "rm_daily_txns_ranjitha_bot":
+            send_to_bot("rm_daily_txns_manav_bot", bot_cfg, group_msg)
+            send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
         # Other groups: send to others bot
         elif group_bot not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot", "rm_daily_txns_gayathri_bot"):
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
