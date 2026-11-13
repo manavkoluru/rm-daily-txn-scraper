@@ -14,6 +14,14 @@ from shared_split import (
     split_status,
 )
 from rate_rules import resolve_is_91
+from commission_tracker import (
+    ACCOUNT,
+    BOT as COMMISSION_BOT,
+    build_report as build_commission_report,
+    load_state as load_commission_state,
+    save_state as save_commission_state,
+    today_ist,
+)
 
 try:
     from playwright.sync_api import sync_playwright
@@ -555,7 +563,7 @@ def format_account_report(username: str, data: dict, display_name: str = "", is_
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 
-def main(only_bot: str = None, exclude_manjula: bool = False):
+def main(only_bot: str = None, exclude_manjula: bool = False, commission_only: bool = False):
     if not PLAYWRIGHT_AVAILABLE:
         print("Error: playwright is not installed. Run: pip install playwright && playwright install chromium")
         return
@@ -573,11 +581,13 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
     filtered_mapping = {k: v for k, v in bot_user_mapping.items() if not only_bot or k == only_bot}
     if exclude_manjula:
         filtered_mapping = {k: v for k, v in filtered_mapping.items() if k != "rm_daily_txns_manjula_bot"}
-    usernames = get_accounts(filtered_mapping)
+    usernames = [ACCOUNT] if commission_only else get_accounts(filtered_mapping)
 
     # Shared accounts must also be scraped for their split bot (e.g. Ranjitha)
     shared_accounts = load_shared_accounts()
     for uid, cfg in shared_accounts.items():
+        if commission_only:
+            break
         if cfg["split_bot"] in filtered_mapping and uid not in usernames:
             usernames.append(uid)
 
@@ -645,6 +655,20 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
             print(scraped_text[username])
 
         browser.close()
+
+    # Commission report (Sujatha / R152545) — manav bot only
+    if commission_only:
+        data = scraped_data.get(ACCOUNT) or {}
+        if not data or "remaining" not in data:
+            send_to_bot(COMMISSION_BOT, bot_config, f"❌ Commission report: could not scrape {ACCOUNT}")
+            return
+        state = load_commission_state()
+        report, state = build_commission_report(
+            data.get("remaining", 0.0), data.get("recent_credit_amount", 0.0), today_ist(), state
+        )
+        save_commission_state(state)
+        send_to_bot(COMMISSION_BOT, bot_config, report)
+        return
 
     # Send per-bot consolidated messages using the bot → [user_ids] mapping
     for bot_name, user_ids in bot_user_mapping.items():
@@ -735,6 +759,9 @@ def main(only_bot: str = None, exclude_manjula: bool = False):
         # Other groups: send to others bot
         elif bot_name not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot", "rm_daily_txns_gayathri_bot"):
             send_to_bot("rm_daily_txns_others_bot", bot_config, message)
+        # Prithvi & Ranjitha groups: also send to manav bot
+        if bot_name in ("rm_daily_txns_prithvi_bot", "rm_daily_txns_ranjitha_bot"):
+            send_to_bot("rm_daily_txns_manav_bot", bot_config, message)
 
 
 if __name__ == "__main__":
@@ -742,5 +769,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--bot", help="Run only this bot (e.g. rm_daily_txns_pavana_bot)")
     parser.add_argument("--exclude-manjula", action="store_true", help="Exclude manjula group from daily report")
+    parser.add_argument("--commission", action="store_true", help="Send Sujatha commission status to manav bot only")
     args = parser.parse_args()
-    main(only_bot=args.bot, exclude_manjula=args.exclude_manjula)
+    main(only_bot=args.bot, exclude_manjula=args.exclude_manjula, commission_only=args.commission)

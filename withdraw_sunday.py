@@ -485,6 +485,9 @@ def main(dry_run: bool = False):
         # Other groups: send to others bot
         elif group_bot not in ("rm_daily_txns_others_bot", "rm_daily_txns_prithvi_bot", "rm_daily_txns_roopa_bot", "rm_daily_txns_gayathri_bot"):
             send_to_bot("rm_daily_txns_others_bot", bot_cfg, group_msg)
+        # Prithvi & Ranjitha groups: also send to manav bot
+        if group_bot in ("rm_daily_txns_prithvi_bot", "rm_daily_txns_ranjitha_bot"):
+            send_to_bot("rm_daily_txns_manav_bot", bot_cfg, group_msg)
 
     # ── Clean up pending file after processing ─────────────────────────────────
     try:
