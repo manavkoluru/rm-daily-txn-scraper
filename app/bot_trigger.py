@@ -102,6 +102,9 @@ WITHDRAW_HELP = """
 `/withdraw gayathri`  — Gayathri's accounts
 `/withdraw R553232`   — Single account by R\\-ID
 
+*🤝 Commission:*
+`/commission`         — Sujatha commission status (manav bot)
+
 *ℹ️ Info:*
 `/status`             — Last 5 GitHub Actions runs
 `/help`               — Show this message
@@ -365,6 +368,10 @@ def handle_all_commands(token: str, chat_id: str, text: str) -> None:
     elif text.startswith("/status"):
         tg_send(token, chat_id, "⏳ Fetching status…")
         tg_send(token, chat_id, get_status())
+
+    elif text.startswith("/commission"):
+        ok, msg = trigger_workflow("commission")
+        tg_send(token, chat_id, "⏳ Commission status requested…" if ok else f"❌ Failed: {msg}")
 
     elif text.startswith("/"):
         tg_send(token, chat_id, "❓ Unknown command. Send /help for all commands.")
