@@ -16,6 +16,8 @@ from shared_split import (
 from rate_rules import resolve_is_91
 from commission_tracker import (
     ACCOUNT,
+    REFERRAL_ACCOUNT,
+    REFERRAL_DAILY_USD,
     BOT as COMMISSION_BOT,
     build_report as build_commission_report,
     load_state as load_commission_state,
@@ -581,7 +583,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False, commission_only: b
     filtered_mapping = {k: v for k, v in bot_user_mapping.items() if not only_bot or k == only_bot}
     if exclude_manjula:
         filtered_mapping = {k: v for k, v in filtered_mapping.items() if k != "rm_daily_txns_manjula_bot"}
-    usernames = [ACCOUNT] if commission_only else get_accounts(filtered_mapping)
+    usernames = [ACCOUNT, REFERRAL_ACCOUNT] if commission_only else get_accounts(filtered_mapping)
 
     # Shared accounts must also be scraped for their split bot (e.g. Ranjitha)
     shared_accounts = load_shared_accounts()
@@ -598,6 +600,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False, commission_only: b
     # Scrape each unique account once — cache both formatted text and raw data
     scraped_text: dict[str, str] = {}
     scraped_data: dict[str, dict] = {}
+    activation_histories: dict[str, list] = {}  # {R-ID: activation history} (commission referral start)
     account_is_91: dict[str, bool] = {}       # {R-ID: 91 rate applies (after top-up check)}
     shared_status: dict[str, tuple] = {}      # {shared R-ID: (active, days_elapsed)}
     shared_split_text: dict[str, str] = {}    # {shared R-ID: Ranjitha-group block}
@@ -620,6 +623,7 @@ def main(only_bot: str = None, exclude_manjula: bool = False, commission_only: b
 
                     data = fetch_data_for_account(page, username)
                     activation_history = fetch_activation_history(page)
+                    activation_histories[username] = activation_history
                     is_91 = resolve_is_91(username, rate_91_set, activation_history)
                     account_is_91[username] = is_91
                     scraped_data[username] = data
@@ -662,9 +666,16 @@ def main(only_bot: str = None, exclude_manjula: bool = False, commission_only: b
         if not data or "remaining" not in data:
             send_to_bot(COMMISSION_BOT, bot_config, f"❌ Commission report: could not scrape {ACCOUNT}")
             return
+        ref_data = scraped_data.get(REFERRAL_ACCOUNT) or {}
+        ref_start = earliest_activation_date(activation_histories.get(REFERRAL_ACCOUNT, []))
         state = load_commission_state()
         report, state = build_commission_report(
-            data.get("remaining", 0.0), data.get("recent_credit_amount", 0.0), today_ist(), state
+            remaining=data.get("remaining", 0.0),
+            sujatha_daily=data.get("recent_credit_amount", 0.0),
+            referral_daily=REFERRAL_DAILY_USD,
+            referral_start=ref_start.date() if ref_start else None,
+            today=today_ist(),
+            state=state,
         )
         save_commission_state(state)
         send_to_bot(COMMISSION_BOT, bot_config, report)

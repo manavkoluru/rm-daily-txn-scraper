@@ -1,19 +1,23 @@
-"""Meghana commission tracker (account R152545 / Sujatha).
+"""Meghana commission tracker (Sujatha R152545, referral Meghana2 R256332).
+
+All math is in USD. INR is display-only.
 
 Rules:
-  - Commission starts 2026-11-07: one-time bonus $250 (paid with week 1) + $50/week for 26 weeks.
-  - D = total commission given so far (bonus + weeks due). Deducted from remaining, hypothetically.
-  - V = scraper remaining − D
-  - T = D
-  - V > T            → RETURNS : sister receives weekly returns normally
+  - Commission starts 2026-11-07: $250 bonus (paid ₹22,000) + $50/week (paid ₹4,450 each), 26 weeks.
+  - D = commission given so far in USD = 250 + 50 × weeks_due.       T = D.
+  - Referral drain: Meghana2 daily credit is deducted from Sujatha's pool each day
+    while active, i.e. for 200 days from Meghana2's activation date (exact day 200 = stop).
+  - Sujatha's own daily credit is already reflected in the scraper's remaining.
+  - pool = scraper remaining − referral drain accrued so far.
+  - V = pool − D
+  - V > T            → RETURNS : sister receives weekly returns
   - 0 < V <= T       → HOLD    : user takes sister's weekly returns
-  - V <= 0           → ZERO    : alert user to take the balance; waits for top-up
+  - V <= 0           → ZERO    : alert; take the balance; waits for top-up
   - Top-up = remaining rises by more than TOPUP_THRESHOLD_USD between runs.
-  - Top-up during HOLD (old pool still > 0): HOLD continues until the old pool
-    (remaining − carry_topup) is cleared. Then normal rules resume.
+    A top-up during HOLD keeps HOLD until the old pool (pool − carry_topup) is cleared.
 
 State (commission_state.json, committed by the workflow):
-  last_remaining, last_phase, carry (bool), carry_topup (float), topups [{date, amount}]
+  last_remaining, last_phase, last_run, referral_accrued, carry, carry_topup, topups
 """
 
 import json
@@ -22,16 +26,18 @@ from datetime import date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 ACCOUNT = "R152545"
+REFERRAL_ACCOUNT = "R256332"
+REFERRAL_DAILY_USD = 6.0      # fixed referral commission per day from Meghana2
+REFERRAL_DAYS = 200
 BOT = "rm_daily_txns_manav_bot"
 START = date(2026, 11, 7)
 BONUS_USD = 250.0
 WEEKLY_USD = 50.0
-WEEKLY_INR_PAID = 4450.0      # what is actually paid per week
-BONUS_INR_PAID = 22000.0      # what was actually paid as bonus
+BONUS_INR_PAID = 22000.0
+WEEKLY_INR_PAID = 4450.0
 WEEKS_TOTAL = 26
 TOPUP_THRESHOLD_USD = 500.0
-RATE_91 = 91
-TAX_KEEP = 0.93
+PROJECTION_DAYS = 3650
 IST = ZoneInfo("Asia/Kolkata")
 
 _BASE = os.path.dirname(os.path.abspath(__file__))
@@ -42,21 +48,42 @@ def today_ist() -> date:
     return datetime.now(IST).date()
 
 
-def usd_to_inr(usd: float) -> float:
-    return round(usd * RATE_91 * TAX_KEEP, 2)
-
-
 def weeks_due(today: date) -> int:
     if today < START:
         return 0
     return min(WEEKS_TOTAL, (today - START).days // 7 + 1)
 
 
-def commission_paid(today: date) -> float:
-    """Total commission given so far in USD: bonus + weekly payments due."""
+def commission_paid_usd(today: date) -> float:
     if today < START:
         return 0.0
     return BONUS_USD + WEEKLY_USD * weeks_due(today)
+
+
+def commission_paid_inr(today: date) -> float:
+    n = weeks_due(today)
+    if n == 0:
+        return 0.0
+    return BONUS_INR_PAID + WEEKLY_INR_PAID * n
+
+
+def referral_active(day: date, referral_start: date | None) -> bool:
+    if referral_start is None:
+        return False
+    return referral_start <= day < referral_start + timedelta(days=REFERRAL_DAYS)
+
+
+def daily_burn(day: date, sujatha_daily: float, referral_daily: float, referral_start: date | None) -> float:
+    """USD deducted from Sujatha's pool on `day`."""
+    burn = sujatha_daily
+    if referral_active(day, referral_start):
+        burn += referral_daily
+    return burn
+
+
+def next_saturday(d: date) -> date:
+    """Action dates are reported on the first Saturday on/after the projected day (weekly cadence)."""
+    return d + timedelta(days=(5 - d.weekday()) % 7)
 
 
 def phase(v: float, t: float) -> str:
@@ -67,39 +94,62 @@ def phase(v: float, t: float) -> str:
     return "RETURNS"
 
 
-def project_hold_date(remaining: float, daily_credit: float, today: date):
-    """First day V <= T. Returns (date, days) or (None, None)."""
-    if remaining - commission_paid(today) <= commission_paid(today):
+def _project(pool: float, today: date, sujatha_daily: float, referral_daily: float,
+             referral_start: date | None, stop_when) -> tuple[date | None, int | None]:
+    """Walks forward day by day. stop_when(pool_after_day, day) -> bool. Returns (day, days_ahead)."""
+    if stop_when(pool, today):
         return today, 0
-    if daily_credit <= 0:
-        return None, None
-    rem = remaining
-    for d in range(1, 3651):
+    for d in range(1, PROJECTION_DAYS + 1):
         day = today + timedelta(days=d)
-        rem -= daily_credit
-        t = commission_paid(day)
-        if rem - t <= t:
+        pool -= daily_burn(day, sujatha_daily, referral_daily, referral_start)
+        if stop_when(pool, day):
             return day, d
     return None, None
 
 
-def project_zero_date(remaining: float, daily_credit: float, today: date):
-    """First day V <= 0. Returns (date, days) or (None, None)."""
-    if remaining - commission_paid(today) <= 0:
-        return today, 0
-    if daily_credit <= 0:
-        return None, None
-    rem = remaining
-    for d in range(1, 3651):
-        day = today + timedelta(days=d)
-        rem -= daily_credit
-        if rem - commission_paid(day) <= 0:
-            return day, d
-    return None, None
+def project_hold(pool: float, today: date, sujatha_daily, referral_daily, referral_start):
+    """First day V <= T (HOLD begins). V and T evaluated on each future day."""
+    return _project(
+        pool, today, sujatha_daily, referral_daily, referral_start,
+        lambda p, day: (p - commission_paid_usd(day)) <= commission_paid_usd(day),
+    )
+
+
+def project_zero(pool: float, today: date, sujatha_daily, referral_daily, referral_start):
+    """First day V <= 0 (balance fully taken)."""
+    return _project(
+        pool, today, sujatha_daily, referral_daily, referral_start,
+        lambda p, day: (p - commission_paid_usd(day)) <= 0,
+    )
+
+
+def project_old_pool_clear(old_pool: float, today: date, sujatha_daily, referral_daily, referral_start):
+    """First day the carried-over pool is exhausted."""
+    return _project(
+        old_pool, today, sujatha_daily, referral_daily, referral_start,
+        lambda p, day: p <= 0,
+    )
+
+
+def accrue_referral(state: dict, today: date, referral_daily: float, referral_start: date | None) -> float:
+    """Adds referral drain for days since last run (or since START on first run). Returns accrued total."""
+    if referral_start is None or referral_daily <= 0:
+        return state.get("referral_accrued", 0.0)
+    last = state.get("last_run")
+    day = date.fromisoformat(last) if last else START
+    accrued = state.get("referral_accrued", 0.0)
+    while day < today:
+        if referral_active(day, referral_start):
+            accrued += referral_daily
+        day += timedelta(days=1)
+    return round(accrued, 2)
 
 
 def default_state() -> dict:
-    return {"last_remaining": None, "last_phase": None, "carry": False, "carry_topup": 0.0, "topups": []}
+    return {
+        "last_remaining": None, "last_phase": None, "last_run": None,
+        "referral_accrued": 0.0, "carry": False, "carry_topup": 0.0, "topups": [],
+    }
 
 
 def load_state() -> dict:
@@ -116,7 +166,8 @@ def save_state(state: dict) -> None:
         f.write("\n")
 
 
-def build_report(remaining: float, daily_credit: float, today: date, state: dict) -> tuple[str, dict]:
+def build_report(remaining: float, sujatha_daily: float, referral_daily: float,
+                 referral_start: date | None, today: date, state: dict) -> tuple[str, dict]:
     """Returns (telegram_message, updated_state)."""
     prev_phase = state.get("last_phase")
     last = state.get("last_remaining")
@@ -129,11 +180,15 @@ def build_report(remaining: float, daily_credit: float, today: date, state: dict
             state["carry_topup"] = round(state.get("carry_topup", 0.0) + amount, 2)
     state["last_remaining"] = remaining
 
-    wd = weeks_due(today)
-    paid = commission_paid(today)
-    v = remaining - paid
+    accrued = accrue_referral(state, today, referral_daily, referral_start)
+    state["referral_accrued"] = accrued
+    state["last_run"] = today.isoformat()
 
-    old_pool = remaining - state.get("carry_topup", 0.0)
+    pool = remaining - accrued
+    paid = commission_paid_usd(today)
+    v = pool - paid
+
+    old_pool = pool - state.get("carry_topup", 0.0)
     if state.get("carry") and old_pool <= 0:
         state["carry"] = False
         state["carry_topup"] = 0.0
@@ -148,42 +203,54 @@ def build_report(remaining: float, daily_credit: float, today: date, state: dict
         "ZERO": "🚨 *ZERO* — remaining cleared. Take the balance. Waiting for top-up",
     }[cur_phase]
 
+    ref_on = referral_active(today, referral_start)
+    burn_today = sujatha_daily + (referral_daily if ref_on else 0.0)
+    ref_end = (referral_start + timedelta(days=REFERRAL_DAYS)) if referral_start else None
+
     lines = [
         f"💼 *Commission Status — Sujatha ({ACCOUNT})*",
         f"_{today.strftime('%d %b %Y')}_",
         "",
-        f"📅 *Weeks due:* {wd} of {WEEKS_TOTAL}",
-        f"🎁 *One-time bonus:* ${BONUS_USD:,.0f} (paid ₹{BONUS_INR_PAID:,.0f}) — paid 07 Nov 2026",
-        f"💵 *Weekly commission:* ${WEEKLY_USD:,.0f} (paid ₹{WEEKLY_INR_PAID:,.0f})",
-        f"🧾 *Total commission given:* ${paid:,.2f} (≈ ₹{usd_to_inr(paid):,.2f})",
+        f"📅 *Weeks due:* {weeks_due(today)} of {WEEKS_TOTAL}",
+        f"🧾 *Total commission given:* ₹{commission_paid_inr(today):,.0f} (${paid:,.2f})",
         "",
-        f"🏦 *Scraper remaining:* ${remaining:,.2f} (≈ ₹{usd_to_inr(remaining):,.2f})",
-        f"📉 *Daily credit:* ${daily_credit:,.2f}",
+        f"🏦 *Scraper remaining:* ${remaining:,.2f}",
+        f"📉 *Daily burn:* ${burn_today:,.2f} (Sujatha ${sujatha_daily:,.2f}"
+        + (f" + Meghana2 ${referral_daily:,.2f})" if ref_on else ")"),
+        f"🔗 *Referral drain accrued:* ${accrued:,.2f}",
         f"⚖️ *Remaining after commission (V):* ${v:,.2f}",
         "",
         phase_line,
     ]
 
     if carry:
-        clear_day, clear_in = project_zero_date(old_pool, daily_credit, today)
+        clear_day, clear_in = project_old_pool_clear(old_pool, today, sujatha_daily, referral_daily, referral_start)
         lines.append(f"🔒 Old pool ${old_pool:,.2f} must clear before returns resume")
-        if clear_day and clear_in:
-            lines.append(f"⏭️ Old pool clears: ~{clear_day.strftime('%d %b %Y')} (~{clear_in} days)")
-    elif cur_phase == "RETURNS":
-        hold_day, hold_in = project_hold_date(remaining, daily_credit, today)
-        if hold_day and hold_in:
+        if clear_day is not None:
             lines.append(
-                f"⏭️ *Stop giving returns from:* {hold_day.strftime('%d %b %Y')} "
-                f"(~{hold_in} days) — remaining reaches commission given"
+                f"⏭️ Old pool clears: {next_saturday(clear_day).strftime('%d %b %Y')} (Sat) "
+                f"— projected {clear_day.strftime('%d %b')}, ~{clear_in} days"
+            )
+    elif cur_phase == "RETURNS":
+        hold_day, hold_in = project_hold(pool, today, sujatha_daily, referral_daily, referral_start)
+        if hold_day is not None:
+            lines.append(
+                f"⏭️ *Stop giving returns from:* {next_saturday(hold_day).strftime('%d %b %Y')} (Sat) "
+                f"— projected {hold_day.strftime('%d %b')}, ~{hold_in} days; remaining reaches commission given"
             )
     elif cur_phase == "HOLD":
-        zero_day, zero_in = project_zero_date(remaining, daily_credit, today)
-        if zero_day and zero_in:
-            lines.append(f"⏭️ *Remaining hits zero:* ~{zero_day.strftime('%d %b %Y')} (~{zero_in} days)")
+        zero_day, zero_in = project_zero(pool, today, sujatha_daily, referral_daily, referral_start)
+        if zero_day is not None:
+            lines.append(
+                f"⏭️ *Remaining hits zero:* {next_saturday(zero_day).strftime('%d %b %Y')} (Sat) "
+                f"— projected {zero_day.strftime('%d %b')}, ~{zero_in} days"
+            )
     else:
-        lines.append("👉 Top-up of $1,000 expected. Returns resume once it is above commission given.")
+        lines.append("👉 Top-up of $1,000 expected. Returns resume once remaining is above commission given.")
 
-    if wd >= WEEKS_TOTAL:
+    if ref_end and today < ref_end:
+        lines.append(f"ℹ️ Meghana2 referral drain ends {ref_end.strftime('%d %b %Y')} (day {REFERRAL_DAYS})")
+    if weeks_due(today) >= WEEKS_TOTAL:
         lines.append("ℹ️ All 26 weekly payments done. No further commission added.")
 
     topups = state.get("topups", [])
