@@ -41,7 +41,7 @@ WORKFLOW_FILE      = "daily_scrape.yml"
 BRANCH             = "main"
 
 GITHUB_API    = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
-KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula", "prithvi", "roopa", "meghana", "deepa", "vandana", "gayathri"]
+KNOWN_GROUPS  = ["manav", "ranjitha", "pavana", "poornima", "others", "vasu", "manjula", "prithvi", "roopa", "meghana", "deepa", "vandana", "gayathri", "navya"]
 
 # ── Help texts ────────────────────────────────────────────────────────────────
 
