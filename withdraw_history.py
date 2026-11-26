@@ -94,19 +94,19 @@ def _parse_withdrawal_date(date_str: str):
 
 
 def _latest_five_oldest_to_newest(withdrawals: list[dict]) -> list[dict]:
-    """Selects the 100 most recent withdrawals by date, returned oldest → newest.
+    """Selects the 1000 most recent withdrawals by date, returned oldest → newest.
 
-    Falls back to page order (last 100 rows) if any date cannot be parsed.
+    Falls back to page order (last 1000 rows) if any date cannot be parsed.
     """
     if not withdrawals:
         return []
 
     dated = [(w, _parse_withdrawal_date(w["date"])) for w in withdrawals]
     if any(d is None for _, d in dated):
-        return withdrawals[-100:]
+        return withdrawals[-1000:]
 
-    # Newest first, take 100, then flip so the list reads oldest → newest
-    latest = sorted(dated, key=lambda item: item[1], reverse=True)[:100]
+    # Newest first, take 1000, then flip so the list reads oldest → newest
+    latest = sorted(dated, key=lambda item: item[1], reverse=True)[:1000]
     return [w for w, _ in reversed(latest)]
 
 
